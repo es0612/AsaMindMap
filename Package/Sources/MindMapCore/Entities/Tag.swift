@@ -1,7 +1,7 @@
 import Foundation
 
 // MARK: - Tag Entity
-public struct Tag: Identifiable, Equatable, Codable, Hashable {
+public struct Tag: Identifiable, Equatable, Codable, Hashable, Sendable {
     public let id: UUID
     public var name: String
     public var color: NodeColor

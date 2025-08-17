@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="22758" systemVersion="23F79" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="MindMapEntity" representedClassName="MindMapEntity" syncable="YES">
+        <attribute name="createdAt" optional="NO" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" optional="NO" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isShared" optional="NO" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="lastSyncedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="rootNodeID" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="sharePermissions" optional="NO" attributeType="String"/>
+        <attribute name="shareURL" optional="YES" attributeType="String"/>
+        <attribute name="title" optional="NO" attributeType="String"/>
+        <attribute name="updatedAt" optional="NO" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="version" optional="NO" attributeType="Integer 32" defaultValue="1" usesScalarValueType="YES"/>
+        <relationship name="media" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="MediaEntity" inverseName="mindMap" inverseEntity="MediaEntity"/>
+        <relationship name="nodes" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="NodeEntity" inverseName="mindMap" inverseEntity="NodeEntity"/>
+        <relationship name="tags" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="TagEntity" inverseName="mindMaps" inverseEntity="TagEntity"/>
+    </entity>
+    <entity name="MediaEntity" representedClassName="MediaEntity" syncable="YES">
+        <attribute name="createdAt" optional="NO" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="data" optional="YES" attributeType="Binary" allowsExternalBinaryDataStorage="YES"/>
+        <attribute name="fileName" optional="YES" attributeType="String"/>
+        <attribute name="fileSize" optional="YES" attributeType="Integer 64" defaultValue="0" usesScalarValueType="YES"/>
+        <attribute name="id" optional="NO" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="mimeType" optional="YES" attributeType="String"/>
+        <attribute name="thumbnailData" optional="YES" attributeType="Binary"/>
+        <attribute name="type" optional="NO" attributeType="String"/>
+        <attribute name="updatedAt" optional="NO" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="url" optional="YES" attributeType="String"/>
+        <relationship name="mindMap" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="MindMapEntity" inverseName="media" inverseEntity="MindMapEntity"/>
+        <relationship name="nodes" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="NodeEntity" inverseName="media" inverseEntity="NodeEntity"/>
+    </entity>
+    <entity name="NodeEntity" representedClassName="NodeEntity" syncable="YES">
+        <attribute name="backgroundColor" optional="NO" attributeType="String"/>
+        <attribute name="createdAt" optional="NO" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="fontSize" optional="NO" attributeType="Float" defaultValue="16" usesScalarValueType="YES"/>
+        <attribute name="id" optional="NO" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isCollapsed" optional="NO" attributeType="Boolean" defaultValue="NO" usesScalarValueType="YES"/>
+        <attribute name="isCompleted" optional="NO" attributeType="Boolean" defaultValue="NO" usesScalarValueType="YES"/>
+        <attribute name="isTask" optional="NO" attributeType="Boolean" defaultValue="NO" usesScalarValueType="YES"/>
+        <attribute name="parentID" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="positionX" optional="NO" attributeType="Float" defaultValue="0.0" usesScalarValueType="YES"/>
+        <attribute name="positionY" optional="NO" attributeType="Float" defaultValue="0.0" usesScalarValueType="YES"/>
+        <attribute name="text" optional="NO" attributeType="String"/>
+        <attribute name="textColor" optional="NO" attributeType="String"/>
+        <attribute name="updatedAt" optional="NO" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="childNodes" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="NodeEntity" inverseName="parentNode" inverseEntity="NodeEntity"/>
+        <relationship name="media" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="MediaEntity" inverseName="nodes" inverseEntity="MediaEntity"/>
+        <relationship name="mindMap" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="MindMapEntity" inverseName="nodes" inverseEntity="MindMapEntity"/>
+        <relationship name="parentNode" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="NodeEntity" inverseName="childNodes" inverseEntity="NodeEntity"/>
+        <relationship name="tags" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="TagEntity" inverseName="nodes" inverseEntity="TagEntity"/>
+    </entity>
+    <entity name="TagEntity" representedClassName="TagEntity" syncable="YES">
+        <attribute name="color" optional="NO" attributeType="String"/>
+        <attribute name="createdAt" optional="NO" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" optional="NO" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="name" optional="NO" attributeType="String"/>
+        <attribute name="tagDescription" optional="YES" attributeType="String"/>
+        <attribute name="updatedAt" optional="NO" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="mindMaps" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="MindMapEntity" inverseName="tags" inverseEntity="MindMapEntity"/>
+        <relationship name="nodes" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="NodeEntity" inverseName="tags" inverseEntity="NodeEntity"/>
+    </entity>
+</model>

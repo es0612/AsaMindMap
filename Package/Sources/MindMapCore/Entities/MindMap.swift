@@ -1,7 +1,7 @@
 import Foundation
 
 // MARK: - MindMap Entity
-public struct MindMap: Identifiable, Equatable, Codable {
+public struct MindMap: Identifiable, Equatable, Codable, Sendable {
     public let id: UUID
     public var title: String
     public var rootNodeID: UUID?
@@ -139,7 +139,7 @@ public struct MindMap: Identifiable, Equatable, Codable {
 }
 
 // MARK: - Share Permissions
-public enum SharePermissions: String, CaseIterable, Codable {
+public enum SharePermissions: String, CaseIterable, Codable, Sendable {
     case `private` = "private"
     case readOnly = "readOnly"
     case readWrite = "readWrite"

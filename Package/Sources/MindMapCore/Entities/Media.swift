@@ -1,7 +1,7 @@
 import Foundation
 
 // MARK: - Media Entity
-public struct Media: Identifiable, Equatable, Codable {
+public struct Media: Identifiable, Equatable, Codable, Sendable {
     public let id: UUID
     public let type: MediaType
     public var data: Data?
@@ -84,7 +84,7 @@ public struct Media: Identifiable, Equatable, Codable {
 }
 
 // MARK: - Media Type
-public enum MediaType: String, CaseIterable, Codable {
+public enum MediaType: String, CaseIterable, Codable, Sendable {
     case image = "image"
     case link = "link"
     case sticker = "sticker"

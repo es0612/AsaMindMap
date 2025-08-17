@@ -2,7 +2,7 @@ import Foundation
 import CoreGraphics
 
 // MARK: - Node Entity
-public struct Node: Identifiable, Equatable, Codable {
+public struct Node: Identifiable, Equatable, Codable, Sendable {
     public let id: UUID
     public var text: String
     public var position: CGPoint
@@ -133,7 +133,7 @@ public struct Node: Identifiable, Equatable, Codable {
 }
 
 // MARK: - Node Color
-public enum NodeColor: String, CaseIterable, Codable {
+public enum NodeColor: String, CaseIterable, Codable, Sendable {
     case `default` = "default"
     case primary = "primary"
     case secondary = "secondary"

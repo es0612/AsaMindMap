@@ -20,7 +20,7 @@ let package = Package(
         // MARK: - Core Business Logic
         .target(
             name: "MindMapCore",
-            dependencies: ["DataLayer"]
+            dependencies: []
         ),
         .testTarget(
             name: "MindMapCoreTests",
@@ -40,7 +40,8 @@ let package = Package(
         // MARK: - Data Layer
         .target(
             name: "DataLayer",
-            dependencies: ["NetworkLayer"]
+            dependencies: ["MindMapCore", "NetworkLayer"],
+            exclude: ["CoreData/MindMapDataModel.xcdatamodeld"]
         ),
         .testTarget(
             name: "DataLayerTests",
