@@ -16,3 +16,6 @@ public extension MindMapUI {
         Logger.shared.info("MindMapUI module configured", category: "initialization")
     }
 }
+
+// MARK: - Public Exports
+// All public types are automatically available when importing MindMapUI
