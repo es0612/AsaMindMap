@@ -284,8 +284,8 @@ struct GestureManagerTests {
         
         // Then
         // パンオフセットが適切に設定されることを確認（アニメーション中の可能性があるため近似値）
-        #expect(abs(gestureManager.panOffset.x - 0) < 50)
-        #expect(abs(gestureManager.panOffset.y - 50) < 50)
+        #expect(abs(gestureManager.panOffset.width - 0) < 50)
+        #expect(abs(gestureManager.panOffset.height - 50) < 50)
     }
 }
 

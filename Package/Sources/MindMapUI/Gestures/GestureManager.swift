@@ -19,7 +19,11 @@ public final class GestureManager: ObservableObject {
     @Published public var lastPanOffset: CGSize = .zero
     
     // MARK: - Gesture State
-    @GestureState private var dragState: DragState = .inactive
+    @GestureState public var dragState: DragState = .inactive
+    @Published public var isDraggingNode: Bool = false
+    @Published public var draggedNodeID: UUID?
+    @Published public var dragStartPosition: CGPoint = .zero
+    @Published public var currentDragPosition: CGPoint = .zero
     
     // MARK: - Gesture Configuration
     public var minimumZoomScale: CGFloat = 0.5
@@ -35,6 +39,10 @@ public final class GestureManager: ObservableObject {
     public var onNodeTap: ((UUID) -> Void)?
     public var onNodeDoubleTap: ((UUID) -> Void)?
     public var onNodeLongPress: ((UUID) -> Void)?
+    public var onNodeDragStarted: ((UUID, CGPoint) -> Void)?
+    public var onNodeDragChanged: ((UUID, CGPoint, CGPoint) -> Void)?
+    public var onNodeDragEnded: ((UUID, CGPoint, CGPoint) -> Void)?
+    public var onCanvasDoubleTap: ((CGPoint) -> Void)?
     
     // MARK: - Initialization
     public init() {}
@@ -89,6 +97,13 @@ public final class GestureManager: ObservableObject {
             }
     }
     
+    public func makeCanvasDoubleTapGesture() -> some Gesture {
+        TapGesture(count: 2)
+            .onEnded { [weak self] _ in
+                self?.onDoubleTap?()
+            }
+    }
+    
     public func makeCombinedCanvasGestures() -> some Gesture {
         SimultaneousGesture(
             makePanGesture(),
@@ -121,13 +136,45 @@ public final class GestureManager: ObservableObject {
             }
     }
     
+    public func makeNodeDragGesture(nodeID: UUID) -> some Gesture {
+        DragGesture(minimumDistance: 5)
+            .onChanged { [weak self] value in
+                guard let self = self else { return }
+                
+                if !self.isDraggingNode {
+                    // Start dragging
+                    self.isDraggingNode = true
+                    self.draggedNodeID = nodeID
+                    self.dragStartPosition = value.startLocation
+                    self.onNodeDragStarted?(nodeID, value.startLocation)
+                }
+                
+                self.currentDragPosition = value.location
+                self.onNodeDragChanged?(nodeID, value.startLocation, value.location)
+            }
+            .onEnded { [weak self] value in
+                guard let self = self else { return }
+                
+                self.isDraggingNode = false
+                self.draggedNodeID = nil
+                self.onNodeDragEnded?(nodeID, value.startLocation, value.location)
+                
+                // Reset drag positions
+                self.dragStartPosition = .zero
+                self.currentDragPosition = .zero
+            }
+    }
+    
     public func makeCombinedNodeGestures(nodeID: UUID) -> some Gesture {
-        ExclusiveGesture(
-            makeNodeDoubleTapGesture(nodeID: nodeID),
+        SimultaneousGesture(
             ExclusiveGesture(
-                makeNodeLongPressGesture(nodeID: nodeID),
-                makeNodeTapGesture(nodeID: nodeID)
-            )
+                makeNodeDoubleTapGesture(nodeID: nodeID),
+                ExclusiveGesture(
+                    makeNodeLongPressGesture(nodeID: nodeID),
+                    makeNodeTapGesture(nodeID: nodeID)
+                )
+            ),
+            makeNodeDragGesture(nodeID: nodeID)
         )
     }
     

@@ -7,9 +7,14 @@ public struct MindMapCanvasView: View {
     
     // MARK: - Properties
     @StateObject private var viewModel: MindMapViewModel
-    @StateObject private var gestureManager = GestureManager()
+    @StateObject private var gestureCoordinator = GestureCoordinator()
     @State private var canvasSize: CGSize = .zero
     @State private var drawingEngine = CanvasDrawingEngine()
+    
+    // MARK: - Gesture Managers (accessed through coordinator)
+    private var gestureManager: GestureManager { gestureCoordinator.gestureManager }
+    private var pencilManager: ApplePencilManager { gestureCoordinator.pencilManager }
+    private var selectionManager: NodeSelectionManager { gestureCoordinator.selectionManager }
     
     // MARK: - Canvas Configuration
     private let canvasConfig = CanvasDrawingEngine.DrawingConfig(
@@ -31,38 +36,48 @@ public struct MindMapCanvasView: View {
         self._viewModel = StateObject(wrappedValue: viewModel)
     }
     
+    public init(viewModel: MindMapViewModel, gestureCoordinator: GestureCoordinator) {
+        self._viewModel = StateObject(wrappedValue: viewModel)
+        self._gestureCoordinator = StateObject(wrappedValue: gestureCoordinator)
+    }
+    
     // MARK: - Body
     public var body: some View {
         GeometryReader { geometry in
             ZStack {
                 // Background
-                Color.clear
-                    .contentShape(Rectangle())
-                    .gesture(gestureManager.makeCombinedCanvasGestures())
-                    .onTapGesture(count: 2) {
-                        handleDoubleTapOnCanvas()
-                    }
+                backgroundLayer
                 
                 // Main Canvas with SwiftUI Canvas
-                Canvas { context, size in
-                    drawCanvasContent(context: context, size: size)
-                }
-                .scaleEffect(gestureManager.magnificationScale)
-                .offset(gestureManager.panOffset)
-                .animation(.interactiveSpring(response: 0.4, dampingFraction: 0.8), value: gestureManager.panOffset)
-                .animation(.interactiveSpring(response: 0.4, dampingFraction: 0.8), value: gestureManager.magnificationScale)
+                canvasLayer
                 
                 // Interactive Node Overlay
                 nodeOverlay
-                    .scaleEffect(gestureManager.magnificationScale)
-                    .offset(gestureManager.panOffset)
-                    .animation(.interactiveSpring(response: 0.4, dampingFraction: 0.8), value: gestureManager.panOffset)
-                    .animation(.interactiveSpring(response: 0.4, dampingFraction: 0.8), value: gestureManager.magnificationScale)
+                
+                // Apple Pencil Drawing Overlay (disabled for now)
+                // if gestureCoordinator.interactionMode == .drawing {
+                //     pencilDrawingOverlay
+                // }
+                
+                // Selection Overlay
+                selectionOverlay
+                
+                // Drag Preview Overlay
+                dragPreviewOverlay
+                
+                // Connection Preview Overlay
+                connectionPreviewOverlay
+                
+                // Context Menu
+                if selectionManager.showContextMenu {
+                    contextMenuOverlay
+                }
             }
             .clipped()
+            .selectionGesture(selectionManager: selectionManager, nodes: viewModel.nodes)
             .onAppear {
                 canvasSize = geometry.size
-                setupGestureCallbacks()
+                setupGestureCoordination()
                 setupDrawingEngine()
                 
                 // Create initial mind map if none exists
@@ -76,11 +91,15 @@ public struct MindMapCanvasView: View {
             }
             .onChange(of: viewModel.nodes) { _ in
                 updateCanvasLayout()
+                selectionManager.updateSelectionBounds(with: viewModel.nodes)
+            }
+            .onReceive(gestureCoordinator.$interactionMode) { mode in
+                handleInteractionModeChange(mode)
             }
         }
         .accessibilityElement(children: .contain)
         .accessibilityLabel("マインドマップキャンバス")
-        .accessibilityHint("ピンチでズーム、ドラッグで移動、ダブルタップで全体表示")
+        .accessibilityHint(accessibilityHint)
     }
     
     // MARK: - Canvas Drawing
@@ -126,6 +145,29 @@ public struct MindMapCanvasView: View {
         context.stroke(path, with: .color(gridColor), lineWidth: 0.5)
     }
     
+    // MARK: - Background Layer
+    @ViewBuilder
+    private var backgroundLayer: some View {
+        Color.clear
+            .contentShape(Rectangle())
+            .gesture(gestureManager.makeCombinedCanvasGestures())
+            .onTapGesture(count: 2, coordinateSpace: .local) { location in
+                handleDoubleTapOnCanvas(at: location)
+            }
+    }
+    
+    // MARK: - Canvas Layer
+    @ViewBuilder
+    private var canvasLayer: some View {
+        Canvas { context, size in
+            drawCanvasContent(context: context, size: size)
+        }
+        .scaleEffect(gestureManager.magnificationScale)
+        .offset(gestureManager.panOffset)
+        .animation(.interactiveSpring(response: 0.4, dampingFraction: 0.8), value: gestureManager.panOffset)
+        .animation(.interactiveSpring(response: 0.4, dampingFraction: 0.8), value: gestureManager.magnificationScale)
+    }
+    
     // MARK: - Node Overlay
     @ViewBuilder
     private var nodeOverlay: some View {
@@ -133,18 +175,123 @@ public struct MindMapCanvasView: View {
             ForEach(viewModel.nodes, id: \.id) { node in
                 NodeView(
                     node: node,
-                    isSelected: viewModel.selectedNodeIDs.contains(node.id),
-                    isEditing: viewModel.editingNodeID == node.id,
+                    isSelected: selectionManager.selectedNodeIDs.contains(node.id),
+                    isEditing: selectionManager.editingNodeID == node.id,
                     isFocused: viewModel.isNodeInFocusedBranch(node.id),
                     isFocusMode: viewModel.isFocusMode
                 )
                 .position(node.position)
-                .gesture(gestureManager.makeCombinedNodeGestures(nodeID: node.id))
-                .zIndex(viewModel.selectedNodeIDs.contains(node.id) ? 2 : 1)
-                .animation(.easeInOut(duration: 0.2), value: viewModel.selectedNodeIDs.contains(node.id))
+                .gesture(makeNodeGestures(nodeID: node.id))
+                .zIndex(selectionManager.selectedNodeIDs.contains(node.id) ? 2 : 1)
+                .opacity(getNodeOpacity(node))
+                .scaleEffect(getNodeScale(node))
+                .animation(.easeInOut(duration: 0.2), value: selectionManager.selectedNodeIDs.contains(node.id))
                 .animation(.easeInOut(duration: 0.3), value: viewModel.isNodeInFocusedBranch(node.id))
             }
         }
+        .scaleEffect(gestureManager.magnificationScale)
+        .offset(gestureManager.panOffset)
+        .animation(.interactiveSpring(response: 0.4, dampingFraction: 0.8), value: gestureManager.panOffset)
+        .animation(.interactiveSpring(response: 0.4, dampingFraction: 0.8), value: gestureManager.magnificationScale)
+    }
+    
+    // MARK: - Pencil Drawing Overlay (disabled for now)
+    @ViewBuilder
+    private var pencilDrawingOverlay: some View {
+        // PencilKit functionality will be implemented later
+        EmptyView()
+    }
+    
+    // MARK: - Selection Overlay
+    @ViewBuilder
+    private var selectionOverlay: some View {
+        if !selectionManager.selectedNodeIDs.isEmpty && selectionManager.selectionBounds != .zero {
+            Rectangle()
+                .stroke(Color.blue, lineWidth: 2)
+                .background(Color.blue.opacity(0.1))
+                .frame(
+                    width: selectionManager.selectionBounds.width,
+                    height: selectionManager.selectionBounds.height
+                )
+                .position(
+                    x: selectionManager.selectionBounds.midX,
+                    y: selectionManager.selectionBounds.midY
+                )
+                .scaleEffect(gestureManager.magnificationScale)
+                .offset(gestureManager.panOffset)
+                .animation(.easeInOut(duration: 0.2), value: selectionManager.selectionBounds)
+        }
+    }
+    
+    // MARK: - Drag Preview Overlay
+    @ViewBuilder
+    private var dragPreviewOverlay: some View {
+        if selectionManager.showDragPreview {
+            Circle()
+                .fill(Color.blue.opacity(0.3))
+                .frame(width: 60, height: 60)
+                .position(selectionManager.dragPreviewPosition)
+                .scaleEffect(gestureManager.magnificationScale)
+                .offset(gestureManager.panOffset)
+                .animation(.easeInOut(duration: 0.1), value: selectionManager.dragPreviewPosition)
+        }
+    }
+    
+    // MARK: - Connection Preview Overlay
+    @ViewBuilder
+    private var connectionPreviewOverlay: some View {
+        if selectionManager.showConnectionPreview {
+            Canvas { context, size in
+                var path = Path()
+                path.move(to: selectionManager.connectionPreviewStart)
+                path.addLine(to: selectionManager.connectionPreviewEnd)
+                
+                context.stroke(
+                    path,
+                    with: .color(.blue.opacity(0.7)),
+                    style: StrokeStyle(lineWidth: 3, dash: [5, 5])
+                )
+                
+                // Draw arrow at end
+                let arrowSize: CGFloat = 10
+                let angle = atan2(
+                    selectionManager.connectionPreviewEnd.y - selectionManager.connectionPreviewStart.y,
+                    selectionManager.connectionPreviewEnd.x - selectionManager.connectionPreviewStart.x
+                )
+                
+                var arrowPath = Path()
+                let arrowTip = selectionManager.connectionPreviewEnd
+                arrowPath.move(to: arrowTip)
+                arrowPath.addLine(to: CGPoint(
+                    x: arrowTip.x - arrowSize * cos(angle - .pi/6),
+                    y: arrowTip.y - arrowSize * sin(angle - .pi/6)
+                ))
+                arrowPath.move(to: arrowTip)
+                arrowPath.addLine(to: CGPoint(
+                    x: arrowTip.x - arrowSize * cos(angle + .pi/6),
+                    y: arrowTip.y - arrowSize * sin(angle + .pi/6)
+                ))
+                
+                context.stroke(arrowPath, with: .color(.blue.opacity(0.7)), lineWidth: 3)
+            }
+            .scaleEffect(gestureManager.magnificationScale)
+            .offset(gestureManager.panOffset)
+            .allowsHitTesting(false)
+        }
+    }
+    
+    // MARK: - Context Menu Overlay
+    @ViewBuilder
+    private var contextMenuOverlay: some View {
+        VStack {
+            contextMenuContent
+        }
+        .background(Color.primary.colorInvert())
+        .cornerRadius(8)
+        .shadow(radius: 8)
+        .position(selectionManager.contextMenuPosition)
+        .transition(.scale.combined(with: .opacity))
+        .zIndex(100)
     }
     
     // MARK: - Setup Methods
@@ -174,38 +321,93 @@ public struct MindMapCanvasView: View {
         }
     }
     
-    // MARK: - Gesture Setup
-    private func setupGestureCallbacks() {
-        gestureManager.onPanChanged = { offset in
-            viewModel.panOffset = offset
+    // MARK: - Gesture Creation
+    @ViewBuilder
+    private func makeCanvasGestures() -> some View {
+        switch gestureCoordinator.interactionMode {
+        case .navigation, .selection:
+            Color.clear.gesture(gestureManager.makeCombinedCanvasGestures())
+        case .drawing:
+            // Limited gestures in drawing mode
+            Color.clear.gesture(gestureManager.makeMagnificationGesture())
+        case .editing:
+            // No canvas gestures in editing mode
+            Color.clear.gesture(TapGesture().onEnded { _ in })
+        }
+    }
+    
+    private func makeNodeGestures(nodeID: UUID) -> some Gesture {
+        // For now, just return the combined gestures regardless of mode
+        return gestureManager.makeCombinedNodeGestures(nodeID: nodeID)
+    }
+    
+    // MARK: - Gesture Coordination Setup
+    private func setupGestureCoordination() {
+        // Connect view model to selection manager
+        selectionManager.onSelectionChanged = { [weak viewModel] selectedIDs in
+            viewModel?.selectedNodeIDs = selectedIDs
         }
         
-        gestureManager.onZoomChanged = { scale in
-            viewModel.zoomScale = scale
+        selectionManager.onEditingStarted = { [weak viewModel] nodeID in
+            viewModel?.startEditingNode(nodeID)
         }
         
-        gestureManager.onDoubleTap = {
-            handleDoubleTapOnCanvas()
+        selectionManager.onEditingEnded = { [weak viewModel] nodeID, text in
+            // Update node text - this will be implemented in the ViewModel
+            // viewModel?.updateNodeText(nodeID, text: text)
         }
         
-        gestureManager.onNodeTap = { nodeID in
-            handleNodeTap(nodeID)
+        selectionManager.onNodeAction = { [weak viewModel] action, nodeIDs in
+            handleNodeAction(action, nodeIDs: nodeIDs)
         }
         
-        gestureManager.onNodeDoubleTap = { nodeID in
-            handleNodeDoubleTap(nodeID)
+        // Connect drag callbacks
+        selectionManager.onNodeDragStarted = { nodeID, position in
+            // Handle node drag started
         }
         
-        gestureManager.onNodeLongPress = { nodeID in
-            handleNodeLongPress(nodeID)
+        selectionManager.onNodeDragChanged = { nodeID, startPos, currentPos in
+            // Handle node drag changed
+        }
+        
+        selectionManager.onNodeDragEnded = { nodeID, startPos, endPos in
+            // Handle node drag ended
+        }
+        
+        selectionManager.onConnectionDragEnded = { sourceID, startPos, endPos, targetID in
+            // Handle connection drag ended
+        }
+        
+        // Connect pencil manager to view model
+        pencilManager.onHandwritingRecognized = { [weak viewModel] text in
+            // Create a new node with recognized text - this will be implemented
+            // if let position = gestureManager.convertPointToCanvas(CGPoint(x: canvasSize.width/2, y: canvasSize.height/2)) {
+            //     viewModel?.createNode(at: position, text: text)
+            // }
+        }
+        
+        // Setup gesture coordinator callbacks
+        gestureCoordinator.onInteractionModeChanged = { mode in
+            // Handle interaction mode changes
+        }
+        
+        gestureCoordinator.onGestureStateChanged = { type, active in
+            // Handle gesture state changes
         }
     }
     
     // MARK: - Gesture Handlers
-    private func handleDoubleTapOnCanvas() {
+    private func handleDoubleTapOnCanvas(at location: CGPoint) {
+        let canvasPoint = gestureManager.convertPointToCanvas(location)
+        
         if viewModel.isFocusMode {
             viewModel.exitFocusMode()
         } else {
+            // Create new node at double-tap location (Requirement 2.2 alternative)
+            // This will be implemented when the ViewModel supports it
+            // viewModel.createNode(at: canvasPoint, text: "新しいノード")
+            
+            // For now, just fit to screen
             viewModel.fitToScreen()
             fitCanvasToScreen()
         }
@@ -233,6 +435,180 @@ public struct MindMapCanvasView: View {
         }
     }
     
+    // MARK: - Node Appearance Helpers
+    private func getNodeOpacity(_ node: Node) -> Double {
+        if gestureCoordinator.interactionMode == .drawing {
+            return 0.7 // Dim nodes in drawing mode
+        } else if viewModel.isFocusMode {
+            return viewModel.isNodeInFocusedBranch(node.id) ? 1.0 : 0.3
+        } else {
+            return 1.0
+        }
+    }
+    
+    private func getNodeScale(_ node: Node) -> CGFloat {
+        if selectionManager.selectedNodeIDs.contains(node.id) {
+            return 1.05
+        } else if selectionManager.highlightedNodeID == node.id {
+            return 1.1
+        } else {
+            return 1.0
+        }
+    }
+    
+    // MARK: - Context Menu Content
+    @ViewBuilder
+    private var contextMenuContent: some View {
+        VStack(spacing: 0) {
+            contextMenuButton("編集", systemImage: "pencil") {
+                if let nodeID = selectionManager.selectedNodeIDs.first {
+                    selectionManager.startEditingNode(nodeID)
+                }
+                selectionManager.hideContextMenu()
+            }
+            
+            Divider()
+            
+            contextMenuButton("子ノード追加", systemImage: "plus.circle") {
+                selectionManager.performAction(.addChild)
+                selectionManager.hideContextMenu()
+            }
+            
+            contextMenuButton("兄弟ノード追加", systemImage: "plus.square") {
+                selectionManager.performAction(.addSibling)
+                selectionManager.hideContextMenu()
+            }
+            
+            Divider()
+            
+            contextMenuButton("コピー", systemImage: "doc.on.doc") {
+                selectionManager.performAction(.copy)
+                selectionManager.hideContextMenu()
+            }
+            
+            contextMenuButton("削除", systemImage: "trash", destructive: true) {
+                selectionManager.performAction(.delete)
+                selectionManager.hideContextMenu()
+            }
+        }
+        .padding(.vertical, 8)
+    }
+    
+    @ViewBuilder
+    private func contextMenuButton(
+        _ title: String,
+        systemImage: String,
+        destructive: Bool = false,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack {
+                Image(systemName: systemImage)
+                    .foregroundColor(destructive ? .red : .primary)
+                Text(title)
+                    .foregroundColor(destructive ? .red : .primary)
+                Spacer()
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+    
+    // MARK: - Node Action Handler
+    private func handleNodeAction(_ action: NodeSelectionManager.NodeAction, nodeIDs: Set<UUID>) {
+        switch action {
+        case .delete:
+            // Delete nodes - will be implemented in ViewModel
+            break
+        case .duplicate:
+            // Implement node duplication
+            break
+        case .copy:
+            // Implement copy to clipboard
+            break
+        case .cut:
+            // Implement cut to clipboard
+            break
+        case .paste:
+            // Implement paste from clipboard
+            break
+        case .addChild:
+            // Add child node - will be implemented in ViewModel
+            break
+        case .addSibling:
+            // Add sibling node - will be implemented in ViewModel
+            break
+        case .convertToTask:
+            // Convert to task - will be implemented in ViewModel
+            break
+        case .addTag, .addMedia, .changeColor, .changeFont, .group, .ungroup:
+            // These will be implemented in future tasks
+            break
+        }
+    }
+    
+    // MARK: - Position Calculation Helpers
+    private func calculateChildNodePosition(parentID: UUID) -> CGPoint {
+        guard let parentNode = viewModel.nodes.first(where: { $0.id == parentID }) else {
+            return CGPoint(x: canvasSize.width/2, y: canvasSize.height/2)
+        }
+        
+        // For now, just use a simple count - this will be properly implemented later
+        let childCount = 0
+        let angle = Double(childCount) * 0.5 // Spread children around parent
+        let distance: CGFloat = 120
+        
+        return CGPoint(
+            x: parentNode.position.x + CGFloat(cos(angle)) * distance,
+            y: parentNode.position.y + CGFloat(sin(angle)) * distance
+        )
+    }
+    
+    private func calculateSiblingNodePosition(siblingID: UUID) -> CGPoint {
+        guard let siblingNode = viewModel.nodes.first(where: { $0.id == siblingID }) else {
+            return CGPoint(x: canvasSize.width/2, y: canvasSize.height/2)
+        }
+        
+        // Place sibling node nearby
+        return CGPoint(
+            x: siblingNode.position.x + 150,
+            y: siblingNode.position.y
+        )
+    }
+    
+    // MARK: - Interaction Mode Handler
+    private func handleInteractionModeChange(_ mode: GestureCoordinator.InteractionMode) {
+        switch mode {
+        case .navigation:
+            // Enable all navigation gestures
+            break
+        case .drawing:
+            // Show drawing tools
+            break
+        case .editing:
+            // Focus on text editing
+            break
+        case .selection:
+            // Enable multi-selection
+            break
+        }
+    }
+    
+    // MARK: - Accessibility
+    private var accessibilityHint: String {
+        switch gestureCoordinator.interactionMode {
+        case .navigation:
+            return "ピンチでズーム、ドラッグで移動、ダブルタップで全体表示"
+        case .drawing:
+            return "Apple Pencilで描画、ダブルタップでナビゲーションモードに切り替え"
+        case .editing:
+            return "テキスト編集中、Escapeキーで終了"
+        case .selection:
+            return "複数選択モード、タップで選択追加"
+        }
+    }
+    
     // MARK: - Canvas Operations
     private func fitCanvasToScreen() {
         guard !viewModel.nodes.isEmpty else { return }
@@ -250,6 +626,8 @@ public struct MindMapCanvasView: View {
             gestureManager.setPanOffset(transform.offset, animated: false)
         }
     }
+    
+
 }
 
 // MARK: - Preview
