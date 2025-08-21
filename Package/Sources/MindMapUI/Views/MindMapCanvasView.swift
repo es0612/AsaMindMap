@@ -178,7 +178,17 @@ public struct MindMapCanvasView: View {
                     isSelected: selectionManager.selectedNodeIDs.contains(node.id),
                     isEditing: selectionManager.editingNodeID == node.id,
                     isFocused: viewModel.isNodeInFocusedBranch(node.id),
-                    isFocusMode: viewModel.isFocusMode
+                    isFocusMode: viewModel.isFocusMode,
+                    media: viewModel.getMediaForNode(node.id),
+                    onAddMedia: {
+                        viewModel.showMediaPicker(for: node.id)
+                    },
+                    onMediaTap: { media in
+                        // Handle media tap - could open media viewer
+                    },
+                    onRemoveMedia: { media in
+                        viewModel.removeMediaFromNode(media, nodeID: node.id)
+                    }
                 )
                 .position(node.position)
                 .gesture(makeNodeGestures(nodeID: node.id))

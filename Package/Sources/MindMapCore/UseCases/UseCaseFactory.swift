@@ -83,4 +83,30 @@ public final class UseCaseFactory {
     public func makeListMindMapsUseCase() -> ListMindMapsUseCaseProtocol {
         ListMindMapsUseCase(mindMapRepository: mindMapRepository)
     }
+    
+    // MARK: - Media Use Cases
+    public func makeAddMediaToNodeUseCase() -> AddMediaToNodeUseCaseProtocol {
+        AddMediaToNodeUseCase(
+            nodeRepository: nodeRepository,
+            mediaRepository: mediaRepository
+        )
+    }
+    
+    public func makeRemoveMediaFromNodeUseCase() -> RemoveMediaFromNodeUseCaseProtocol {
+        RemoveMediaFromNodeUseCase(
+            nodeRepository: nodeRepository,
+            mediaRepository: mediaRepository
+        )
+    }
+    
+    public func makeGetNodeMediaUseCase() -> GetNodeMediaUseCaseProtocol {
+        GetNodeMediaUseCase(
+            nodeRepository: nodeRepository,
+            mediaRepository: mediaRepository
+        )
+    }
+    
+    public func makeValidateMediaURLUseCase() -> ValidateMediaURLUseCaseProtocol {
+        ValidateMediaURLUseCase()
+    }
 }

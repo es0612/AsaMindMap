@@ -107,5 +107,31 @@ extension DIContainer {
                 nodeRepository: self.resolve(NodeRepositoryProtocol.self)
             )
         }
+        
+        // Register media use cases
+        register(AddMediaToNodeUseCaseProtocol.self) {
+            AddMediaToNodeUseCase(
+                nodeRepository: self.resolve(NodeRepositoryProtocol.self),
+                mediaRepository: self.resolve(MediaRepositoryProtocol.self)
+            )
+        }
+        
+        register(RemoveMediaFromNodeUseCaseProtocol.self) {
+            RemoveMediaFromNodeUseCase(
+                nodeRepository: self.resolve(NodeRepositoryProtocol.self),
+                mediaRepository: self.resolve(MediaRepositoryProtocol.self)
+            )
+        }
+        
+        register(GetNodeMediaUseCaseProtocol.self) {
+            GetNodeMediaUseCase(
+                nodeRepository: self.resolve(NodeRepositoryProtocol.self),
+                mediaRepository: self.resolve(MediaRepositoryProtocol.self)
+            )
+        }
+        
+        register(ValidateMediaURLUseCaseProtocol.self) {
+            ValidateMediaURLUseCase()
+        }
     }
 }

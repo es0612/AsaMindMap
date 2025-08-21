@@ -238,3 +238,71 @@ public class MockMediaRepository: MediaRepositoryProtocol {
         // Mock implementation
     }
 }
+
+// MARK: - Mock Tag Repository
+public class MockTagRepository: TagRepositoryProtocol {
+    public var tags: [UUID: Tag] = [:]
+    public var saveCallCount = 0
+    public var deleteCallCount = 0
+    
+    public init() {}
+    
+    public func save(_ tag: Tag) async throws {
+        tags[tag.id] = tag
+        saveCallCount += 1
+    }
+    
+    public func findByID(_ id: UUID) async throws -> Tag? {
+        return tags[id]
+    }
+    
+    public func findAll() async throws -> [Tag] {
+        return Array(tags.values)
+    }
+    
+    public func delete(_ id: UUID) async throws {
+        tags.removeValue(forKey: id)
+        deleteCallCount += 1
+    }
+    
+    public func exists(_ id: UUID) async throws -> Bool {
+        return tags[id] != nil
+    }
+    
+    public func findByName(_ name: String) async throws -> [Tag] {
+        return tags.values.filter { $0.name.contains(name) }
+    }
+    
+    public func findByColor(_ color: NodeColor) async throws -> [Tag] {
+        return tags.values.filter { $0.color == color }
+    }
+    
+    public func findByNode(_ nodeID: UUID) async throws -> [Tag] {
+        // Mock implementation - would need to check node-tag relationships
+        return Array(tags.values)
+    }
+    
+    public func findMostUsed(limit: Int) async throws -> [Tag] {
+        return Array(tags.values.prefix(limit))
+    }
+    
+    public func getUsageCount(for tagID: UUID) async throws -> Int {
+        return tags[tagID] != nil ? 1 : 0
+    }
+    
+    public func findUnusedTags() async throws -> [Tag] {
+        return []
+    }
+    
+    public func saveAll(_ tags: [Tag]) async throws {
+        for tag in tags {
+            try await save(tag)
+        }
+    }
+    
+    public func deleteAll(_ ids: [UUID]) async throws {
+        for id in ids {
+            try await delete(id)
+        }
+    }
+}

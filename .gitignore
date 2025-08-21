@@ -109,3 +109,5 @@ iOSInjectionProject/
 
 # SwiftFormat
 .swiftformat.bak
+
+.serena/cache/

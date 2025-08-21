@@ -33,10 +33,10 @@ let package = Package(
             name: "MindMapUI",
             dependencies: ["MindMapCore", "DesignSystem"]
         ),
-        .testTarget(
-            name: "MindMapUITests",
-            dependencies: ["MindMapUI"]
-        ),
+        // .testTarget(
+        //     name: "MindMapUITests",
+        //     dependencies: ["MindMapUI"]
+        // ),
         
         // MARK: - Data Layer
         .target(

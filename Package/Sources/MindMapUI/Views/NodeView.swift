@@ -10,12 +10,25 @@ public struct NodeView: View {
     
     // MARK: - Properties
     let node: Node
+    let tags: [Tag]
     let isSelected: Bool
     let isEditing: Bool
     let isFocused: Bool
     let isFocusMode: Bool
+    let media: [Media]
+    let showDetailedTags: Bool
+    let onAddMedia: (() -> Void)?
+    let onMediaTap: ((Media) -> Void)?
+    let onRemoveMedia: ((Media) -> Void)?
+    let onToggleTask: (() -> Void)?
+    let onToggleCompletion: (() -> Void)?
+    let onTagTap: ((Tag) -> Void)?
+    let onRemoveTag: ((Tag) -> Void)?
+    let onShowAllTags: (() -> Void)?
     
     @State private var editingText: String = ""
+    @State private var showingMediaPicker = false
+    @State private var showingDetailedTags = false
     @FocusState private var isTextFieldFocused: Bool
     
     // MARK: - Computed Properties
@@ -56,6 +69,43 @@ public struct NodeView: View {
         }
     }
     
+    // MARK: - Initializers
+    public init(
+        node: Node,
+        tags: [Tag] = [],
+        isSelected: Bool = false,
+        isEditing: Bool = false,
+        isFocused: Bool = false,
+        isFocusMode: Bool = false,
+        media: [Media] = [],
+        showDetailedTags: Bool = false,
+        onAddMedia: (() -> Void)? = nil,
+        onMediaTap: ((Media) -> Void)? = nil,
+        onRemoveMedia: ((Media) -> Void)? = nil,
+        onToggleTask: (() -> Void)? = nil,
+        onToggleCompletion: (() -> Void)? = nil,
+        onTagTap: ((Tag) -> Void)? = nil,
+        onRemoveTag: ((Tag) -> Void)? = nil,
+        onShowAllTags: (() -> Void)? = nil
+    ) {
+        self.node = node
+        self.tags = tags
+        self.isSelected = isSelected
+        self.isEditing = isEditing
+        self.isFocused = isFocused
+        self.isFocusMode = isFocusMode
+        self.media = media
+        self.showDetailedTags = showDetailedTags
+        self.onAddMedia = onAddMedia
+        self.onMediaTap = onMediaTap
+        self.onRemoveMedia = onRemoveMedia
+        self.onToggleTask = onToggleTask
+        self.onToggleCompletion = onToggleCompletion
+        self.onTagTap = onTagTap
+        self.onRemoveTag = onRemoveTag
+        self.onShowAllTags = onShowAllTags
+    }
+    
     // MARK: - Body
     public var body: some View {
         ZStack {
@@ -71,23 +121,38 @@ public struct NodeView: View {
                 )
             
             // Node Content
-            HStack(spacing: 8) {
-                // Task Checkbox
-                if node.isTask {
-                    taskCheckbox
+            VStack(spacing: 8) {
+                // Main content row
+                HStack(spacing: 8) {
+                    // Task Checkbox
+                    if node.isTask {
+                        taskCheckbox
+                    }
+                    
+                    // Text Content
+                    textContent
+                    
+                    // Action Buttons
+                    if isSelected {
+                        actionButtons
+                    }
                 }
                 
-                // Text Content
-                textContent
-                
-                // Media Indicator
-                if !node.mediaIDs.isEmpty {
-                    mediaIndicator
+                // Tags Display
+                if !tags.isEmpty && (showDetailedTags || showingDetailedTags) {
+                    tagDetailView
+                } else if !tags.isEmpty {
+                    tagSummaryView
                 }
                 
-                // Tag Indicators
-                if !node.tagIDs.isEmpty {
-                    tagIndicators
+                // Media Display
+                if !media.isEmpty {
+                    MediaDisplayView(
+                        media: media,
+                        maxDisplayCount: 3,
+                        onMediaTap: onMediaTap,
+                        onRemoveMedia: onRemoveMedia
+                    )
                 }
             }
             .padding(.horizontal, 12)
@@ -108,6 +173,11 @@ public struct NodeView: View {
                 isTextFieldFocused = false
             }
         }
+        .onTapGesture(count: 2) {
+            if node.isTask {
+                onToggleCompletion?()
+            }
+        }
         // Accessibility
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityLabel)
@@ -119,11 +189,19 @@ public struct NodeView: View {
     @ViewBuilder
     private var taskCheckbox: some View {
         Button(action: {
-            // Task completion toggle - will be implemented in task management
+            onToggleCompletion?()
         }) {
-            Image(systemName: node.isCompleted ? "checkmark.circle.fill" : "circle")
-                .foregroundColor(node.isCompleted ? .green : .gray)
-                .font(.system(size: 16, weight: .medium))
+            ZStack {
+                Circle()
+                    .stroke(node.isCompleted ? Color.green : Color.gray, lineWidth: 2)
+                    .frame(width: 18, height: 18)
+                
+                if node.isCompleted {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundColor(.green)
+                }
+            }
         }
         .buttonStyle(PlainButtonStyle())
         .accessibilityLabel(node.isCompleted ? "完了済みタスク" : "未完了タスク")
@@ -152,34 +230,105 @@ public struct NodeView: View {
         }
     }
     
-    // MARK: - Media Indicator
+    // MARK: - Action Buttons
     @ViewBuilder
-    private var mediaIndicator: some View {
-        HStack(spacing: 2) {
-            Image(systemName: "paperclip")
-                .font(.system(size: 10))
-                .foregroundColor(.secondary)
+    private var actionButtons: some View {
+        HStack(spacing: 4) {
+            // Task Toggle Button
+            if onToggleTask != nil {
+                Button(action: {
+                    onToggleTask?()
+                }) {
+                    Image(systemName: node.isTask ? "square.fill" : "square")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(node.isTask ? .blue : .gray)
+                }
+                .buttonStyle(PlainButtonStyle())
+                .accessibilityLabel(node.isTask ? "タスクを解除" : "タスクに変換")
+            }
             
-            Text("\(node.mediaIDs.count)")
-                .font(.system(size: 10, weight: .medium))
-                .foregroundColor(.secondary)
+            // Media Button
+            if onAddMedia != nil {
+                Button(action: {
+                    onAddMedia?()
+                }) {
+                    Image(systemName: "plus.circle")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.blue)
+                }
+                .buttonStyle(PlainButtonStyle())
+                .accessibilityLabel("メディアを追加")
+            }
         }
-        .accessibilityLabel("\(node.mediaIDs.count)個のメディア添付")
     }
     
-    // MARK: - Tag Indicators
+    // MARK: - Tag Summary View
     @ViewBuilder
-    private var tagIndicators: some View {
-        HStack(spacing: 2) {
-            Image(systemName: "tag")
-                .font(.system(size: 10))
-                .foregroundColor(.secondary)
-            
-            Text("\(node.tagIDs.count)")
-                .font(.system(size: 10, weight: .medium))
-                .foregroundColor(.secondary)
+    private var tagSummaryView: some View {
+        Button(action: {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                showingDetailedTags.toggle()
+            }
+        }) {
+            HStack(spacing: 4) {
+                Image(systemName: "tag")
+                    .font(.system(size: 10))
+                    .foregroundColor(.secondary)
+                
+                Text("\(tags.count)")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundColor(.secondary)
+                
+                if tags.count > 0 {
+                    Text("・\(tags.prefix(2).map(\.name).joined(separator: "・"))")
+                        .font(.system(size: 10))
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                }
+            }
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(Color.gray.opacity(0.1))
+            .clipShape(RoundedRectangle(cornerRadius: 6))
         }
-        .accessibilityLabel("\(node.tagIDs.count)個のタグ")
+        .buttonStyle(PlainButtonStyle())
+        .accessibilityLabel("\(tags.count)個のタグ")
+        .accessibilityHint("タップして詳細表示")
+    }
+    
+    // MARK: - Tag Detail View
+    @ViewBuilder
+    private var tagDetailView: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text("タグ")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundColor(.secondary)
+                
+                Spacer()
+                
+                Button(action: {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        showingDetailedTags = false
+                    }
+                }) {
+                    Image(systemName: "chevron.up")
+                        .font(.system(size: 8))
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
+            
+            TagCollectionView(
+                tags: tags,
+                size: .small,
+                maxDisplayCount: showDetailedTags ? nil : 4,
+                onTagTap: onTagTap,
+                onTagRemove: onRemoveTag,
+                onShowAll: onShowAllTags
+            )
+        }
+        .padding(.top, 4)
     }
     
     // MARK: - Accessibility
@@ -190,12 +339,12 @@ public struct NodeView: View {
             label += node.isCompleted ? "、完了済みタスク" : "、未完了タスク"
         }
         
-        if !node.mediaIDs.isEmpty {
-            label += "、\(node.mediaIDs.count)個のメディア添付"
+        if !media.isEmpty {
+            label += "、\(media.count)個のメディア添付"
         }
         
-        if !node.tagIDs.isEmpty {
-            label += "、\(node.tagIDs.count)個のタグ"
+        if !tags.isEmpty {
+            label += "、\(tags.count)個のタグ: \(tags.map(\.name).joined(separator: "、"))"
         }
         
         return label
@@ -208,6 +357,10 @@ public struct NodeView: View {
             hints.append("テキストを編集中")
         } else {
             hints.append("ダブルタップで編集")
+        }
+        
+        if node.isTask {
+            hints.append("ダブルタップで完了状態を切り替え")
         }
         
         hints.append("長押しでブランチにフォーカス")
@@ -232,7 +385,11 @@ struct NodeView_Previews: PreviewProvider {
                 isSelected: false,
                 isEditing: false,
                 isFocused: true,
-                isFocusMode: false
+                isFocusMode: false,
+                media: [],
+                onAddMedia: nil,
+                onMediaTap: nil,
+                onRemoveMedia: nil
             )
             
             // Selected node
@@ -245,7 +402,11 @@ struct NodeView_Previews: PreviewProvider {
                 isSelected: true,
                 isEditing: false,
                 isFocused: true,
-                isFocusMode: false
+                isFocusMode: false,
+                media: [],
+                onAddMedia: { print("Add media") },
+                onMediaTap: nil,
+                onRemoveMedia: nil
             )
             
             // Task node
@@ -260,22 +421,31 @@ struct NodeView_Previews: PreviewProvider {
                 isSelected: false,
                 isEditing: false,
                 isFocused: true,
-                isFocusMode: false
+                isFocusMode: false,
+                media: [],
+                onAddMedia: nil,
+                onMediaTap: nil,
+                onRemoveMedia: nil
             )
             
-            // Completed task node
+            // Node with media
             NodeView(
                 node: Node(
                     id: UUID(),
-                    text: "完了済みタスク",
-                    position: .zero,
-                    isTask: true,
-                    isCompleted: true
+                    text: "メディア付きノード",
+                    position: .zero
                 ),
                 isSelected: false,
                 isEditing: false,
                 isFocused: true,
-                isFocusMode: false
+                isFocusMode: false,
+                media: [
+                    Media(type: .image, fileName: "test.jpg"),
+                    Media(type: .link, url: "https://example.com")
+                ],
+                onAddMedia: nil,
+                onMediaTap: { _ in print("Media tapped") },
+                onRemoveMedia: { _ in print("Remove media") }
             )
             
             // Editing node
@@ -288,7 +458,11 @@ struct NodeView_Previews: PreviewProvider {
                 isSelected: false,
                 isEditing: true,
                 isFocused: true,
-                isFocusMode: false
+                isFocusMode: false,
+                media: [],
+                onAddMedia: nil,
+                onMediaTap: nil,
+                onRemoveMedia: nil
             )
         }
         .padding()

@@ -58,3 +58,54 @@ public enum MindMapError: LocalizedError, Equatable {
         }
     }
 }
+
+// MARK: - Tag Error Types
+public enum TagError: LocalizedError, Equatable {
+    case invalidName
+    case tagNotFound
+    case duplicateTag
+    
+    public var errorDescription: String? {
+        switch self {
+        case .invalidName:
+            return "無効なタグ名です"
+        case .tagNotFound:
+            return "タグが見つかりません"
+        case .duplicateTag:
+            return "同名のタグが既に存在します"
+        }
+    }
+}
+
+// MARK: - Node Error Types
+public enum NodeError: LocalizedError, Equatable {
+    case notFound
+    case invalidHierarchy
+    case cyclicDependency
+    
+    public var errorDescription: String? {
+        switch self {
+        case .notFound:
+            return "ノードが見つかりません"
+        case .invalidHierarchy:
+            return "無効な階層構造です"
+        case .cyclicDependency:
+            return "循環依存が検出されました"
+        }
+    }
+}
+
+// MARK: - Task Error Types
+public enum TaskError: LocalizedError, Equatable {
+    case notATask
+    case invalidTaskState
+    
+    public var errorDescription: String? {
+        switch self {
+        case .notATask:
+            return "このノードはタスクではありません"
+        case .invalidTaskState:
+            return "無効なタスク状態です"
+        }
+    }
+}

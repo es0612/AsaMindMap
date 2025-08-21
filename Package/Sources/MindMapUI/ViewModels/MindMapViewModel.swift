@@ -15,6 +15,11 @@ public final class MindMapViewModel: ObservableObject {
     @Published public var errorMessage: String?
     @Published public var showError: Bool = false
     
+    // MARK: - Media Properties
+    @Published public var nodeMedia: [UUID: [Media]] = [:]
+    @Published public var showingMediaPicker: Bool = false
+    @Published public var mediaPickerNodeID: UUID?
+    
     // MARK: - Canvas State
     @Published public var canvasTransform: CGAffineTransform = .identity
     @Published public var zoomScale: CGFloat = 1.0
@@ -201,6 +206,121 @@ public final class MindMapViewModel: ObservableObject {
     private func updateCanvasTransform() {
         canvasTransform = CGAffineTransform(scaleX: zoomScale, y: zoomScale)
             .translatedBy(x: panOffset.width / zoomScale, y: panOffset.height / zoomScale)
+    }
+    
+    // MARK: - Media Operations
+    public func showMediaPicker(for nodeID: UUID) {
+        mediaPickerNodeID = nodeID
+        showingMediaPicker = true
+    }
+    
+    public func hideMediaPicker() {
+        showingMediaPicker = false
+        mediaPickerNodeID = nil
+    }
+    
+    public func addMediaToNode(_ result: MediaPickerResult, nodeID: UUID) {
+        isLoading = true
+        
+        Task {
+            do {
+                let addMediaUseCase = container.resolve(AddMediaToNodeUseCaseProtocol.self)
+                
+                let request = AddMediaToNodeRequest(
+                    nodeID: nodeID,
+                    mediaType: result.type,
+                    data: result.data,
+                    url: result.url,
+                    fileName: result.fileName,
+                    mimeType: result.mimeType
+                )
+                
+                let response = try await addMediaUseCase.execute(request)
+                
+                await MainActor.run {
+                    // Update node in the array
+                    if let nodeIndex = nodes.firstIndex(where: { $0.id == nodeID }) {
+                        nodes[nodeIndex] = response.updatedNode
+                    }
+                    
+                    // Update media cache
+                    var currentMedia = nodeMedia[nodeID] ?? []
+                    currentMedia.append(response.media)
+                    nodeMedia[nodeID] = currentMedia
+                    
+                    // Update mindMap version
+                    mindMap?.incrementVersion()
+                    
+                    isLoading = false
+                    hideMediaPicker()
+                }
+            } catch {
+                await MainActor.run {
+                    handleError(error)
+                }
+            }
+        }
+    }
+    
+    public func removeMediaFromNode(_ media: Media, nodeID: UUID) {
+        isLoading = true
+        
+        Task {
+            do {
+                let removeMediaUseCase = container.resolve(RemoveMediaFromNodeUseCaseProtocol.self)
+                
+                let request = RemoveMediaFromNodeRequest(
+                    nodeID: nodeID,
+                    mediaID: media.id
+                )
+                
+                let response = try await removeMediaUseCase.execute(request)
+                
+                await MainActor.run {
+                    // Update node in the array
+                    if let nodeIndex = nodes.firstIndex(where: { $0.id == nodeID }) {
+                        nodes[nodeIndex] = response.updatedNode
+                    }
+                    
+                    // Update media cache
+                    var currentMedia = nodeMedia[nodeID] ?? []
+                    currentMedia.removeAll { $0.id == media.id }
+                    nodeMedia[nodeID] = currentMedia
+                    
+                    // Update mindMap version
+                    mindMap?.incrementVersion()
+                    
+                    isLoading = false
+                }
+            } catch {
+                await MainActor.run {
+                    handleError(error)
+                }
+            }
+        }
+    }
+    
+    public func loadMediaForNode(_ nodeID: UUID) {
+        Task {
+            do {
+                let getNodeMediaUseCase = container.resolve(GetNodeMediaUseCaseProtocol.self)
+                
+                let request = GetNodeMediaRequest(nodeID: nodeID)
+                let response = try await getNodeMediaUseCase.execute(request)
+                
+                await MainActor.run {
+                    nodeMedia[nodeID] = response.media
+                }
+            } catch {
+                await MainActor.run {
+                    handleError(error)
+                }
+            }
+        }
+    }
+    
+    public func getMediaForNode(_ nodeID: UUID) -> [Media] {
+        return nodeMedia[nodeID] ?? []
     }
     
     // MARK: - Error Handling
