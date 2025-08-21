@@ -109,4 +109,16 @@ public final class UseCaseFactory {
     public func makeValidateMediaURLUseCase() -> ValidateMediaURLUseCaseProtocol {
         ValidateMediaURLUseCase()
     }
+    
+    // MARK: - Quick Entry Use Cases
+    public func makeParseTextUseCase() -> ParseTextUseCaseProtocol {
+        ParseTextUseCase()
+    }
+    
+    public func makeGenerateMindMapFromTextUseCase() -> GenerateMindMapFromTextUseCaseProtocol {
+        GenerateMindMapFromTextUseCase(
+            mindMapRepository: mindMapRepository,
+            nodeRepository: nodeRepository
+        )
+    }
 }
