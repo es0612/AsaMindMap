@@ -1,4 +1,5 @@
 import Foundation
+import CloudKit
 
 // MARK: - Use Case Factory
 public final class UseCaseFactory {
@@ -7,19 +8,25 @@ public final class UseCaseFactory {
     private let mediaRepository: MediaRepositoryProtocol
     private let tagRepository: TagRepositoryProtocol
     private let shareURLGenerator: ShareURLGeneratorProtocol
+    private let cloudKitSyncManager: CloudKitSyncManagerProtocol
     
     public init(
         mindMapRepository: MindMapRepositoryProtocol,
         nodeRepository: NodeRepositoryProtocol,
         mediaRepository: MediaRepositoryProtocol,
         tagRepository: TagRepositoryProtocol,
-        shareURLGenerator: ShareURLGeneratorProtocol = DefaultShareURLGenerator()
+        shareURLGenerator: ShareURLGeneratorProtocol = DefaultShareURLGenerator(),
+        cloudKitSyncManager: CloudKitSyncManagerProtocol? = nil
     ) {
         self.mindMapRepository = mindMapRepository
         self.nodeRepository = nodeRepository
         self.mediaRepository = mediaRepository
         self.tagRepository = tagRepository
         self.shareURLGenerator = shareURLGenerator
+        self.cloudKitSyncManager = cloudKitSyncManager ?? CloudKitSyncManager(
+            mindMapRepository: mindMapRepository,
+            nodeRepository: nodeRepository
+        )
     }
     
     // MARK: - Node Use Cases
@@ -141,5 +148,10 @@ public final class UseCaseFactory {
         ShareExportUseCase(
             exportUseCase: makeExportMindMapUseCase()
         )
+    }
+    
+    // MARK: - CloudKit Sync
+    public func makeCloudKitSyncManager() -> CloudKitSyncManagerProtocol {
+        return cloudKitSyncManager
     }
 }
