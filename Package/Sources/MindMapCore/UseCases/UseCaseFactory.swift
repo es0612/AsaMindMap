@@ -121,4 +121,25 @@ public final class UseCaseFactory {
             nodeRepository: nodeRepository
         )
     }
+    
+    // MARK: - Export/Import Use Cases
+    public func makeExportMindMapUseCase() -> ExportMindMapUseCaseProtocol {
+        ExportMindMapUseCase(
+            mindMapRepository: mindMapRepository,
+            nodeRepository: nodeRepository
+        )
+    }
+    
+    public func makeImportMindMapUseCase() -> ImportMindMapUseCaseProtocol {
+        ImportMindMapUseCase(
+            mindMapRepository: mindMapRepository,
+            nodeRepository: nodeRepository
+        )
+    }
+    
+    public func makeShareExportUseCase() -> ShareExportUseCaseProtocol {
+        ShareExportUseCase(
+            exportUseCase: makeExportMindMapUseCase()
+        )
+    }
 }
