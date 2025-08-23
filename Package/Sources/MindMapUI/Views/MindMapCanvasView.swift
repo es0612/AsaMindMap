@@ -75,6 +75,14 @@ public struct MindMapCanvasView: View {
             }
             .clipped()
             .selectionGesture(selectionManager: selectionManager, nodes: viewModel.nodes)
+            // MARK: - Accessibility Support
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel(AccessibilityHelper.generateCanvasLabel(for: viewModel.mindMap))
+            .accessibilityHint(AccessibilityHelper.generateCanvasHint())
+            .accessibilityAction(.default) {
+                // デフォルトアクション: ノード追加
+                viewModel.handleCanvasDoubleTap(at: geometry.frame(in: .local).center)
+            }
             .onAppear {
                 canvasSize = geometry.size
                 setupGestureCoordination()

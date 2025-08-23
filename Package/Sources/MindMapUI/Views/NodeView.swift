@@ -333,39 +333,17 @@ public struct NodeView: View {
     
     // MARK: - Accessibility
     private var accessibilityLabel: String {
-        var label = node.text
-        
-        if node.isTask {
-            label += node.isCompleted ? "、完了済みタスク" : "、未完了タスク"
-        }
-        
-        if !media.isEmpty {
-            label += "、\(media.count)個のメディア添付"
-        }
-        
-        if !tags.isEmpty {
-            label += "、\(tags.count)個のタグ: \(tags.map(\.name).joined(separator: "、"))"
-        }
-        
-        return label
+        // アクセシビリティヘルパーを使用
+        return node.accessibilityLabel(tags: tags)
     }
     
     private var accessibilityHint: String {
-        var hints: [String] = []
-        
+        // アクセシビリティヘルパーを使用
         if isEditing {
-            hints.append("テキストを編集中")
+            return AccessibilityHelper.generateEditingHint()
         } else {
-            hints.append("ダブルタップで編集")
+            return node.accessibilityHint
         }
-        
-        if node.isTask {
-            hints.append("ダブルタップで完了状態を切り替え")
-        }
-        
-        hints.append("長押しでブランチにフォーカス")
-        
-        return hints.joined(separator: "、")
     }
 }
 
