@@ -9,6 +9,7 @@ public final class UseCaseFactory {
     private let tagRepository: TagRepositoryProtocol
     private let shareURLGenerator: ShareURLGeneratorProtocol
     private let cloudKitSyncManager: CloudKitSyncManagerProtocol
+    private let sharingManager: SharingManagerProtocol
     
     public init(
         mindMapRepository: MindMapRepositoryProtocol,
@@ -16,7 +17,8 @@ public final class UseCaseFactory {
         mediaRepository: MediaRepositoryProtocol,
         tagRepository: TagRepositoryProtocol,
         shareURLGenerator: ShareURLGeneratorProtocol = DefaultShareURLGenerator(),
-        cloudKitSyncManager: CloudKitSyncManagerProtocol? = nil
+        cloudKitSyncManager: CloudKitSyncManagerProtocol? = nil,
+        sharingManager: SharingManagerProtocol? = nil
     ) {
         self.mindMapRepository = mindMapRepository
         self.nodeRepository = nodeRepository
@@ -24,6 +26,10 @@ public final class UseCaseFactory {
         self.tagRepository = tagRepository
         self.shareURLGenerator = shareURLGenerator
         self.cloudKitSyncManager = cloudKitSyncManager ?? CloudKitSyncManager(
+            mindMapRepository: mindMapRepository,
+            nodeRepository: nodeRepository
+        )
+        self.sharingManager = sharingManager ?? SharingManager(
             mindMapRepository: mindMapRepository,
             nodeRepository: nodeRepository
         )
@@ -153,5 +159,10 @@ public final class UseCaseFactory {
     // MARK: - CloudKit Sync
     public func makeCloudKitSyncManager() -> CloudKitSyncManagerProtocol {
         return cloudKitSyncManager
+    }
+    
+    // MARK: - Sharing
+    public func makeSharingManager() -> SharingManagerProtocol {
+        return sharingManager
     }
 }

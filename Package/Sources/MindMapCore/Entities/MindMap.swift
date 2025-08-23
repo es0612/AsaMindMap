@@ -143,12 +143,14 @@ public enum SharePermissions: String, CaseIterable, Codable, Sendable {
     case `private` = "private"
     case readOnly = "readOnly"
     case readWrite = "readWrite"
+    case admin = "admin"
     
     public var displayName: String {
         switch self {
         case .private: return "プライベート"
         case .readOnly: return "読み取り専用"
         case .readWrite: return "読み書き可能"
+        case .admin: return "管理者"
         }
     }
     
@@ -157,6 +159,10 @@ public enum SharePermissions: String, CaseIterable, Codable, Sendable {
     }
     
     public var canWrite: Bool {
-        self == .readWrite
+        self == .readWrite || self == .admin
+    }
+    
+    public var canAdmin: Bool {
+        self == .admin
     }
 }
