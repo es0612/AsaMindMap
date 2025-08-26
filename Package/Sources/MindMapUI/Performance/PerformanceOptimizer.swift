@@ -174,15 +174,16 @@ public class CoreAnimationOptimizer {
             self?.recordFrameTime(endTime - startTime)
         }
         
-        // Use Core Animation for optimal performance
-        let animation = CABasicAnimation(keyPath: "position")
-        animation.fromValue = NSValue(point: startPoint)
-        animation.toValue = NSValue(point: endPoint)
-        animation.duration = duration
-        animation.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+        // For testing purposes, we'll simulate Core Animation without actual layers
+        // In real implementation, this would use CABasicAnimation on actual CALayers
+        let animationDuration = duration
+        let distance = sqrt(pow(endPoint.x - startPoint.x, 2) + pow(endPoint.y - startPoint.y, 2))
+        let complexity = min(1.0, distance / 1000.0) // Normalize complexity
         
-        // Apply animation to a hypothetical layer
-        // In real implementation, this would be applied to actual CALayer
+        // Simulate animation timing based on complexity
+        DispatchQueue.main.asyncAfter(deadline: .now() + animationDuration * complexity) {
+            // Animation completion callback would go here
+        }
         
         updateMeasuredFrameRate()
     }
