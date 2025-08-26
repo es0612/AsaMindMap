@@ -22,6 +22,7 @@ public struct FocusableViewModifier: ViewModifier {
 }
 
 // MARK: - Keyboard Navigation View
+@available(iOS 16.0, macOS 14.0, *)
 public struct KeyboardNavigationView<Content: View>: View {
     
     let content: Content
@@ -42,12 +43,8 @@ public struct KeyboardNavigationView<Content: View>: View {
         content
             .environmentObject(focusManager)
             .accessibilityElement(children: .contain)
-            .onKeyPress(.tab) { press in
-                if press.modifiers.contains(.shift) {
-                    focusManager.moveFocusToPrevious()
-                } else {
-                    focusManager.moveFocusToNext()
-                }
+            .onKeyPress(.tab) {
+                focusManager.moveFocusToNext()
                 return .handled
             }
             .onKeyPress(.space) {
@@ -100,6 +97,7 @@ extension Notification.Name {
 }
 
 // MARK: - View Extensions
+@available(iOS 16.0, macOS 14.0, *)
 extension View {
     public func focusable(_ element: FocusableElement) -> some View {
         modifier(FocusableViewModifier(element: element))

@@ -44,70 +44,57 @@ public struct MindMapCanvasView: View {
     // MARK: - Body
     public var body: some View {
         GeometryReader { geometry in
-            ZStack {
-                // Background
-                backgroundLayer
-                
-                // Main Canvas with SwiftUI Canvas
-                canvasLayer
-                
-                // Interactive Node Overlay
-                nodeOverlay
-                
-                // Apple Pencil Drawing Overlay (disabled for now)
-                // if gestureCoordinator.interactionMode == .drawing {
-                //     pencilDrawingOverlay
-                // }
-                
-                // Selection Overlay
-                selectionOverlay
-                
-                // Drag Preview Overlay
-                dragPreviewOverlay
-                
-                // Connection Preview Overlay
-                connectionPreviewOverlay
-                
-                // Context Menu
-                if selectionManager.showContextMenu {
-                    contextMenuOverlay
-                }
-            }
-            .clipped()
-            .selectionGesture(selectionManager: selectionManager, nodes: viewModel.nodes)
-            // MARK: - Accessibility Support
-            .accessibilityElement(children: .contain)
-            .accessibilityLabel(AccessibilityHelper.generateCanvasLabel(for: viewModel.mindMap))
-            .accessibilityHint(AccessibilityHelper.generateCanvasHint())
-            .accessibilityAction(.default) {
-                // デフォルトアクション: ノード追加
-                viewModel.handleCanvasDoubleTap(at: geometry.frame(in: .local).center)
-            }
-            .onAppear {
-                canvasSize = geometry.size
-                setupGestureCoordination()
-                setupDrawingEngine()
-                
-                // Create initial mind map if none exists
-                if viewModel.mindMap == nil {
-                    viewModel.createNewMindMap()
-                }
-            }
-            .onChange(of: geometry.size) { newSize in
-                canvasSize = newSize
-                updateCanvasLayout()
-            }
-            .onChange(of: viewModel.nodes) { _ in
-                updateCanvasLayout()
-                selectionManager.updateSelectionBounds(with: viewModel.nodes)
-            }
-            .onReceive(gestureCoordinator.$interactionMode) { mode in
-                handleInteractionModeChange(mode)
-            }
+            buildCanvasView(geometry: geometry)
         }
         .accessibilityElement(children: .contain)
         .accessibilityLabel("マインドマップキャンバス")
         .accessibilityHint(accessibilityHint)
+    }
+    
+    @ViewBuilder
+    private func buildCanvasView(geometry: GeometryProxy) -> some View {
+        ZStack {
+            backgroundLayer
+            canvasLayer
+            nodeOverlay
+            selectionOverlay
+            dragPreviewOverlay
+            connectionPreviewOverlay
+            
+            if selectionManager.showContextMenu {
+                contextMenuOverlay
+            }
+        }
+        .clipped()
+        .selectionGesture(selectionManager: selectionManager, nodes: viewModel.nodes)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(AccessibilityHelper.generateCanvasLabel(for: viewModel.mindMap ?? MindMap(title: "Empty")))
+        .accessibilityHint(AccessibilityHelper.generateCanvasHint())
+        .accessibilityAction(.default) {
+            // Default action for accessibility
+            let center = CGPoint(x: geometry.frame(in: .local).width/2, y: geometry.frame(in: .local).height/2)
+            handleDoubleTapOnCanvas(at: center)
+        }
+        .onAppear {
+            canvasSize = geometry.size
+            setupGestureCoordination()
+            setupDrawingEngine()
+            
+            if viewModel.mindMap == nil {
+                viewModel.createNewMindMap()
+            }
+        }
+        .onChange(of: geometry.size) { newSize in
+            canvasSize = newSize
+            updateCanvasLayout()
+        }
+        .onChange(of: viewModel.nodes) { _ in
+            updateCanvasLayout()
+            selectionManager.updateSelectionBounds(with: viewModel.nodes)
+        }
+        .onReceive(gestureCoordinator.$interactionMode) { mode in
+            handleInteractionModeChange(mode)
+        }
     }
     
     // MARK: - Canvas Drawing
@@ -644,8 +631,6 @@ public struct MindMapCanvasView: View {
             gestureManager.setPanOffset(transform.offset, animated: false)
         }
     }
-    
-
 }
 
 // MARK: - Preview
