@@ -306,3 +306,80 @@ public class MockTagRepository: TagRepositoryProtocol {
         }
     }
 }
+
+// MARK: - Mock Additional Services
+public class MockShareURLGenerator: ShareURLGeneratorProtocol {
+    public init() {}
+    
+    public func generateShareURL(mindMapID: UUID, permissions: SharePermissions) async throws -> String {
+        return "https://example.com/share/\(mindMapID)"
+    }
+}
+
+public class MockCloudKitSyncManager: CloudKitSyncManagerProtocol {
+    public init() {}
+    
+    public func syncMindMaps() async throws {}
+    
+    public func syncMindMap(_ mindMap: MindMap) async throws -> MindMap {
+        return mindMap
+    }
+    
+    public func syncNodes(for mindMapID: UUID) async throws -> [Node] {
+        return []
+    }
+    
+    public func handleConflict(local: MindMap, remote: MindMap) async throws -> MindMap {
+        return local
+    }
+    
+    public func isOfflineMode() -> Bool {
+        return false
+    }
+    
+    public func enableOfflineMode(_ enabled: Bool) {}
+}
+
+public class MockSharingManager: SharingManagerProtocol {
+    public init() {}
+    
+    public func generateShareLink(for mindMapID: UUID) async throws -> ShareLink {
+        return ShareLink(
+            url: URL(string: "https://example.com/share/\(mindMapID)")!,
+            shareID: UUID(),
+            mindMapID: mindMapID,
+            permissions: .readOnly,
+            expiresAt: nil,
+            createdAt: Date()
+        )
+    }
+    
+    public func revokeShare(for mindMapID: UUID) async throws {}
+    
+    public func getSharedMindMap(from shareURL: URL) async throws -> SharedMindMap {
+        let mindMap = MindMap(title: "Shared MindMap", nodeIDs: [])
+        let shareInfo = ShareInfo(
+            shareID: UUID(),
+            mindMapID: mindMap.id,
+            ownerID: UUID(),
+            permissions: .readOnly,
+            shareURL: shareURL,
+            createdAt: Date(),
+            expiresAt: nil,
+            isActive: true
+        )
+        return SharedMindMap(
+            mindMap: mindMap,
+            shareInfo: shareInfo,
+            isOwner: false
+        )
+    }
+    
+    public func isShared(_ mindMapID: UUID) async throws -> Bool {
+        return false
+    }
+    
+    public func getActiveShares() async throws -> [ShareInfo] {
+        return []
+    }
+}

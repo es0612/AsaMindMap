@@ -160,8 +160,8 @@ public struct NodeView: View {
         }
         .opacity(nodeOpacity)
         .scaleEffect(isSelected ? 1.05 : 1.0)
-        .animation(.easeInOut(duration: 0.2), value: isSelected)
-        .animation(.easeInOut(duration: 0.3), value: nodeOpacity)
+        .optimizedAnimation(AnimationConfiguration.nodeSelection(), value: isSelected)
+        .optimizedAnimation(AnimationConfiguration.nodeSelection(duration: 0.3), value: nodeOpacity)
         .onAppear {
             editingText = node.text
         }

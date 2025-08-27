@@ -34,8 +34,7 @@ final class SimplePerformanceTests: XCTestCase {
         
         let rootNode = Node(
             id: UUID(),
-            title: "Root",
-            content: "Root node",
+            text: "Root",
             position: CGPoint(x: 400, y: 300),
             parentID: nil
         )
@@ -44,8 +43,7 @@ final class SimplePerformanceTests: XCTestCase {
         for i in 1..<count {
             let node = Node(
                 id: UUID(),
-                title: "Node \(i)",
-                content: "Content \(i)",
+                text: "Node \(i)",
                 position: CGPoint(x: Double.random(in: 0...800), y: Double.random(in: 0...600)),
                 parentID: rootNode.id
             )

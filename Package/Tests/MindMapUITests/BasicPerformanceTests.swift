@@ -105,3 +105,5 @@ final class BasicPerformanceTests: XCTestCase {
         return nodes
     }
 }
+
+// Note: Mock classes are defined in PerformanceTests.swift to avoid duplication

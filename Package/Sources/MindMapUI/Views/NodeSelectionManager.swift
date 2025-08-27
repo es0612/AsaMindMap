@@ -205,7 +205,7 @@ public final class NodeSelectionManager: ObservableObject {
     
     // MARK: - Visual Feedback
     private func triggerSelectionAnimation() {
-        withAnimation(.easeInOut(duration: 0.2)) {
+        withAnimation(AnimationConfiguration.nodeSelection()) {
             selectionAnimation.toggle()
         }
     }

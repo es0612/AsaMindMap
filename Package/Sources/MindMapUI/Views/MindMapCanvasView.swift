@@ -159,8 +159,8 @@ public struct MindMapCanvasView: View {
         }
         .scaleEffect(gestureManager.magnificationScale)
         .offset(gestureManager.panOffset)
-        .animation(.interactiveSpring(response: 0.4, dampingFraction: 0.8), value: gestureManager.panOffset)
-        .animation(.interactiveSpring(response: 0.4, dampingFraction: 0.8), value: gestureManager.magnificationScale)
+        .optimizedAnimation(AnimationConfiguration.canvasInteraction(), value: gestureManager.panOffset)
+        .optimizedAnimation(AnimationConfiguration.canvasInteraction(), value: gestureManager.magnificationScale)
     }
     
     // MARK: - Node Overlay
@@ -190,14 +190,14 @@ public struct MindMapCanvasView: View {
                 .zIndex(selectionManager.selectedNodeIDs.contains(node.id) ? 2 : 1)
                 .opacity(getNodeOpacity(node))
                 .scaleEffect(getNodeScale(node))
-                .animation(.easeInOut(duration: 0.2), value: selectionManager.selectedNodeIDs.contains(node.id))
-                .animation(.easeInOut(duration: 0.3), value: viewModel.isNodeInFocusedBranch(node.id))
+                .optimizedAnimation(AnimationConfiguration.nodeSelection(), value: selectionManager.selectedNodeIDs.contains(node.id))
+                .optimizedAnimation(AnimationConfiguration.nodeSelection(duration: 0.3), value: viewModel.isNodeInFocusedBranch(node.id))
             }
         }
         .scaleEffect(gestureManager.magnificationScale)
         .offset(gestureManager.panOffset)
-        .animation(.interactiveSpring(response: 0.4, dampingFraction: 0.8), value: gestureManager.panOffset)
-        .animation(.interactiveSpring(response: 0.4, dampingFraction: 0.8), value: gestureManager.magnificationScale)
+        .optimizedAnimation(AnimationConfiguration.canvasInteraction(), value: gestureManager.panOffset)
+        .optimizedAnimation(AnimationConfiguration.canvasInteraction(), value: gestureManager.magnificationScale)
     }
     
     // MARK: - Pencil Drawing Overlay (disabled for now)
@@ -224,7 +224,7 @@ public struct MindMapCanvasView: View {
                 )
                 .scaleEffect(gestureManager.magnificationScale)
                 .offset(gestureManager.panOffset)
-                .animation(.easeInOut(duration: 0.2), value: selectionManager.selectionBounds)
+                .optimizedAnimation(AnimationConfiguration.nodeSelection(), value: selectionManager.selectionBounds)
         }
     }
     
@@ -238,7 +238,7 @@ public struct MindMapCanvasView: View {
                 .position(selectionManager.dragPreviewPosition)
                 .scaleEffect(gestureManager.magnificationScale)
                 .offset(gestureManager.panOffset)
-                .animation(.easeInOut(duration: 0.1), value: selectionManager.dragPreviewPosition)
+                .optimizedAnimation(AnimationConfiguration.nodeSelection(duration: AnimationConfiguration.quickTransition), value: selectionManager.dragPreviewPosition)
         }
     }
     
@@ -295,7 +295,7 @@ public struct MindMapCanvasView: View {
         .cornerRadius(8)
         .shadow(radius: 8)
         .position(selectionManager.contextMenuPosition)
-        .transition(.scale.combined(with: .opacity))
+        .transition(AnimationConfiguration.uiTransition)
         .zIndex(100)
     }
     
@@ -626,7 +626,7 @@ public struct MindMapCanvasView: View {
         )
         
         // Animate to fit content
-        withAnimation(.easeInOut(duration: 0.6)) {
+        withAnimation(AnimationConfiguration.nodeSelection(duration: AnimationConfiguration.extendedTransition)) {
             gestureManager.setZoomScale(transform.scale, animated: false)
             gestureManager.setPanOffset(transform.offset, animated: false)
         }

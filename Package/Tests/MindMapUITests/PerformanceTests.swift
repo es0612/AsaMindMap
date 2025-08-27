@@ -146,8 +146,7 @@ final class PerformanceTests: XCTestCase {
         // Create root node
         let rootNode = Node(
             id: UUID(),
-            title: "Root",
-            content: "Root node",
+            text: "Root",
             position: CGPoint(x: 500, y: 500),
             parentID: nil
         )
@@ -157,8 +156,7 @@ final class PerformanceTests: XCTestCase {
         for i in 1..<count {
             let node = Node(
                 id: UUID(),
-                title: "Node \(i)",
-                content: "Content \(i)",
+                text: "Node \(i)",
                 position: CGPoint(
                     x: Double.random(in: 0...1000),
                     y: Double.random(in: 0...1000)
@@ -178,8 +176,7 @@ final class PerformanceTests: XCTestCase {
         // Create root
         let root = Node(
             id: UUID(),
-            title: "Root",
-            content: "Root",
+            text: "Root",
             position: CGPoint(x: 500, y: 500),
             parentID: nil
         )
@@ -194,8 +191,7 @@ final class PerformanceTests: XCTestCase {
                 for i in 0..<breadth {
                     let child = Node(
                         id: UUID(),
-                        title: "Node L\(level)_\(i)",
-                        content: "Content L\(level)_\(i)",
+                        text: "Node L\(level)_\(i)",
                         position: CGPoint(
                             x: parent.position.x + Double.random(in: -100...100),
                             y: parent.position.y + Double.random(in: -100...100)
@@ -270,5 +266,17 @@ class PerformanceBenchmark {
 }
 
 class MemoryLeakTracker {
-    var unreleasedObjects: Int { 0 }
+    private var trackedObjects = NSHashTable<AnyObject>.weakObjects()
+    
+    var unreleasedObjects: Int {
+        return trackedObjects.count
+    }
+    
+    func trackObject(_ object: AnyObject) {
+        trackedObjects.add(object)
+    }
+    
+    func releaseObject(_ object: AnyObject) {
+        trackedObjects.remove(object)
+    }
 }

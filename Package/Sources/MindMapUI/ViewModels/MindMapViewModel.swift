@@ -51,7 +51,9 @@ public final class MindMapViewModel: ObservableObject {
     public func createNewMindMap(title: String = "新しいマインドマップ") {
         isLoading = true
         
-        Task {
+        Task { [weak self] in
+            guard let self = self else { return }
+            
             var newMindMap = MindMap(
                 id: UUID(),
                 title: title,
@@ -68,7 +70,8 @@ public final class MindMapViewModel: ObservableObject {
             
             newMindMap.setRootNode(rootNode.id)
             
-            await MainActor.run {
+            await MainActor.run { [weak self] in
+                guard let self = self else { return }
                 self.mindMap = newMindMap
                 self.nodes = [rootNode]
                 self.isLoading = false
@@ -222,7 +225,9 @@ public final class MindMapViewModel: ObservableObject {
     public func addMediaToNode(_ result: MediaPickerResult, nodeID: UUID) {
         isLoading = true
         
-        Task {
+        Task { [weak self] in
+            guard let self = self else { return }
+            
             do {
                 let addMediaUseCase = container.resolve(AddMediaToNodeUseCaseProtocol.self)
                 
@@ -237,7 +242,9 @@ public final class MindMapViewModel: ObservableObject {
                 
                 let response = try await addMediaUseCase.execute(request)
                 
-                await MainActor.run {
+                await MainActor.run { [weak self] in
+                    guard let self = self else { return }
+                    
                     // Update node in the array
                     if let nodeIndex = nodes.firstIndex(where: { $0.id == nodeID }) {
                         nodes[nodeIndex] = response.updatedNode
@@ -255,7 +262,8 @@ public final class MindMapViewModel: ObservableObject {
                     hideMediaPicker()
                 }
             } catch {
-                await MainActor.run {
+                await MainActor.run { [weak self] in
+                    guard let self = self else { return }
                     handleError(error)
                 }
             }
@@ -265,7 +273,9 @@ public final class MindMapViewModel: ObservableObject {
     public func removeMediaFromNode(_ media: Media, nodeID: UUID) {
         isLoading = true
         
-        Task {
+        Task { [weak self] in
+            guard let self = self else { return }
+            
             do {
                 let removeMediaUseCase = container.resolve(RemoveMediaFromNodeUseCaseProtocol.self)
                 
@@ -276,7 +286,9 @@ public final class MindMapViewModel: ObservableObject {
                 
                 let response = try await removeMediaUseCase.execute(request)
                 
-                await MainActor.run {
+                await MainActor.run { [weak self] in
+                    guard let self = self else { return }
+                    
                     // Update node in the array
                     if let nodeIndex = nodes.firstIndex(where: { $0.id == nodeID }) {
                         nodes[nodeIndex] = response.updatedNode
@@ -293,7 +305,8 @@ public final class MindMapViewModel: ObservableObject {
                     isLoading = false
                 }
             } catch {
-                await MainActor.run {
+                await MainActor.run { [weak self] in
+                    guard let self = self else { return }
                     handleError(error)
                 }
             }
@@ -301,18 +314,22 @@ public final class MindMapViewModel: ObservableObject {
     }
     
     public func loadMediaForNode(_ nodeID: UUID) {
-        Task {
+        Task { [weak self] in
+            guard let self = self else { return }
+            
             do {
                 let getNodeMediaUseCase = container.resolve(GetNodeMediaUseCaseProtocol.self)
                 
                 let request = GetNodeMediaRequest(nodeID: nodeID)
                 let response = try await getNodeMediaUseCase.execute(request)
                 
-                await MainActor.run {
+                await MainActor.run { [weak self] in
+                    guard let self = self else { return }
                     nodeMedia[nodeID] = response.media
                 }
             } catch {
-                await MainActor.run {
+                await MainActor.run { [weak self] in
+                    guard let self = self else { return }
                     handleError(error)
                 }
             }

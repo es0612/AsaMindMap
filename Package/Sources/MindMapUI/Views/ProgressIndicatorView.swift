@@ -71,7 +71,7 @@ public struct ProgressIndicatorView: View {
                     )
                     .frame(width: size.circularSize, height: size.circularSize)
                     .rotationEffect(.degrees(-90))
-                    .animation(.easeInOut(duration: 0.5), value: progress.percentage)
+                    .optimizedAnimation(AnimationConfiguration.progressUpdate(), value: progress.percentage)
                 
                 // Center Content
                 VStack(spacing: 2) {
@@ -123,7 +123,7 @@ public struct ProgressIndicatorView: View {
                 RoundedRectangle(cornerRadius: size.cornerRadius)
                     .fill(progressColor)
                     .frame(width: size.linearWidth * (progress.percentage / 100), height: size.barHeight)
-                    .animation(.easeInOut(duration: 0.5), value: progress.percentage)
+                    .optimizedAnimation(AnimationConfiguration.progressUpdate(), value: progress.percentage)
             }
             .frame(width: size.linearWidth)
             

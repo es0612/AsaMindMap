@@ -15,7 +15,7 @@ let package = Package(
         .library(name: "DesignSystem", targets: ["DesignSystem"])
     ],
     dependencies: [
-        // No external dependencies for now - keeping it minimal
+        // Testing framework - swift-testing from Apple (iOS 18+/macOS 14+)
     ],
     targets: [
         // MARK: - Core Business Logic

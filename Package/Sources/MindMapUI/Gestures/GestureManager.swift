@@ -190,7 +190,7 @@ public final class GestureManager: ObservableObject {
         let clampedScale = max(minimumZoomScale, min(maximumZoomScale, scale))
         
         if animated {
-            withAnimation(.easeInOut(duration: 0.3)) {
+            withAnimation(AnimationConfiguration.nodeSelection(duration: 0.3)) {
                 magnificationScale = clampedScale
                 lastMagnificationScale = clampedScale
             }
@@ -202,7 +202,7 @@ public final class GestureManager: ObservableObject {
     
     public func setPanOffset(_ offset: CGSize, animated: Bool = true) {
         if animated {
-            withAnimation(.easeInOut(duration: 0.3)) {
+            withAnimation(AnimationConfiguration.nodeSelection(duration: 0.3)) {
                 panOffset = offset
                 lastPanOffset = offset
             }
@@ -252,7 +252,7 @@ extension GestureManager {
             height: screenSize.height / 2 - centerY * scale
         )
         
-        withAnimation(.easeInOut(duration: 0.5)) {
+        withAnimation(AnimationConfiguration.nodeSelection(duration: AnimationConfiguration.longTransition)) {
             setZoomScale(scale, animated: false)
             setPanOffset(targetOffset, animated: false)
         }
@@ -264,7 +264,7 @@ extension GestureManager {
             height: screenSize.height / 2 - point.y * magnificationScale
         )
         
-        withAnimation(.easeInOut(duration: 0.4)) {
+        withAnimation(AnimationConfiguration.nodeSelection(duration: 0.4)) {
             setPanOffset(targetOffset, animated: false)
         }
     }
@@ -277,7 +277,7 @@ extension GestureManager {
             height: screenSize.height / 2 - position.y * clampedScale
         )
         
-        withAnimation(.easeInOut(duration: 0.5)) {
+        withAnimation(AnimationConfiguration.nodeSelection(duration: AnimationConfiguration.longTransition)) {
             setZoomScale(clampedScale, animated: false)
             setPanOffset(targetOffset, animated: false)
         }
@@ -297,7 +297,7 @@ extension GestureManager {
             height: currentPointInScreen.y - point.y * clampedScale
         )
         
-        withAnimation(.interactiveSpring(response: 0.3, dampingFraction: 0.8)) {
+        withAnimation(AnimationConfiguration.canvasInteraction(response: 0.3, damping: 0.8)) {
             setZoomScale(clampedScale, animated: false)
             setPanOffset(newOffset, animated: false)
         }
