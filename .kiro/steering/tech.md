@@ -181,6 +181,8 @@ make clean
 - **ENABLE_BITCODE**: NO (iOS 16+)
 - **SWIFT_COMPILATION_MODE**: Optimize for Speed (Release)
 - **GCC_OPTIMIZATION_LEVEL**: Optimize for Speed (Release)
+- **SWIFT_ACTIVE_COMPILATION_CONDITIONS**: DEBUG (Debug builds)
+- **OTHER_SWIFT_FLAGS**: Performance optimization flags
 
 ### Development vs Production
 ```bash
