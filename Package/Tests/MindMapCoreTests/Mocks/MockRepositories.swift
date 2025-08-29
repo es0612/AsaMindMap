@@ -104,6 +104,12 @@ public class MockMindMapRepository: MindMapRepositoryProtocol {
     public var saveCallCount = 0
     public var deleteCallCount = 0
     
+    // Search functionality tracking
+    public var searchCallHistory: [SearchRequest] = []
+    public var indexCreationCalled = false
+    public var indexUpdateCalled = false
+    public var fullRebuildCalled = false
+    
     public init() {}
     
     public func save(_ mindMap: MindMap) async throws {
@@ -164,6 +170,75 @@ public class MockMindMapRepository: MindMapRepositoryProtocol {
         guard var mindMap = mindMaps[id] else { return }
         mindMap.markAsSynced()
         mindMaps[id] = mindMap
+    }
+    
+    // MARK: - Search Functionality Mock Methods
+    
+    public func search(_ request: SearchRequest) async throws -> [SearchResult] {
+        searchCallHistory.append(request)
+        
+        // Mock implementation: create sample search results
+        var results: [SearchResult] = []
+        
+        // Simulate finding matching nodes
+        for mindMap in mindMaps.values {
+            if let specificMindMapId = request.mindMapId, mindMap.id != specificMindMapId {
+                continue
+            }
+            
+            // Simulate matching nodes based on query
+            if mindMap.title.localizedCaseInsensitiveContains(request.query) {
+                results.append(SearchResult(
+                    nodeId: mindMap.rootNodeID ?? UUID(),
+                    mindMapId: mindMap.id,
+                    relevanceScore: 0.9,
+                    matchType: .title,
+                    highlightedText: mindMap.title,
+                    matchPosition: mindMap.title.range(of: request.query, options: .caseInsensitive)?.lowerBound.utf16Offset(in: mindMap.title) ?? 0
+                ))
+            }
+        }
+        
+        // Sort by relevance score
+        return results.sorted { $0.relevanceScore > $1.relevanceScore }
+    }
+    
+    public func createSearchIndex(for mindMapId: UUID) async throws -> IndexCreationResponse {
+        indexCreationCalled = true
+        return IndexCreationResponse(
+            mindMapId: mindMapId,
+            indexedNodesCount: Int.random(in: 5...50),
+            success: true
+        )
+    }
+    
+    public func updateSearchIndex(_ request: UpdateIndexRequest) async throws -> IndexUpdateResponse {
+        indexUpdateCalled = true
+        return IndexUpdateResponse(
+            nodeId: request.nodeId,
+            action: request.action,
+            success: true
+        )
+    }
+    
+    public func rebuildAllSearchIndexes() async throws -> IndexRebuildResponse {
+        fullRebuildCalled = true
+        return IndexRebuildResponse(
+            totalMindMaps: mindMaps.count,
+            totalIndexedNodes: Int.random(in: 50...500),
+            success: true
+        )
+    }
+    
+    public func setupLargeDataset() {
+        // Create a large number of mind maps for performance testing
+        for i in 0..<100 {
+            let mindMap = MindMap(
+                title: "Test MindMap \(i)",
+                rootNodeID: UUID()
+            )
+            mindMaps[mindMap.id] = mindMap
+        }
     }
 }
 
