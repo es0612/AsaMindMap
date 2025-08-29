@@ -254,5 +254,3 @@ public final class RebuildSearchIndexesUseCase: RebuildSearchIndexesUseCaseProto
 }
 
 // MARK: - Extensions
-
-extension MindMapRepositoryProtocol: SearchRepositoryProtocol {}

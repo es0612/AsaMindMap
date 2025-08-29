@@ -28,8 +28,6 @@ public enum SmartCollectionRule: Codable, Equatable, Hashable {
                 return "種類が「通常ノード」"
             case .task:
                 return "種類が「タスク」"
-            case .note:
-                return "種類が「ノート」"
             }
         case .isCompleted(let completed):
             return completed ? "完了済み" : "未完了"

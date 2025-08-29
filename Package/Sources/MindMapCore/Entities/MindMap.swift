@@ -11,6 +11,7 @@ public struct MindMap: Identifiable, Equatable, Codable, Sendable {
     public var isShared: Bool
     public var shareURL: String?
     public var sharePermissions: SharePermissions
+    public var templateId: UUID?
     public let createdAt: Date
     public var updatedAt: Date
     public var lastSyncedAt: Date?
@@ -27,6 +28,7 @@ public struct MindMap: Identifiable, Equatable, Codable, Sendable {
         isShared: Bool = false,
         shareURL: String? = nil,
         sharePermissions: SharePermissions = .private,
+        templateId: UUID? = nil,
         createdAt: Date = Date(),
         updatedAt: Date = Date(),
         lastSyncedAt: Date? = nil,
@@ -41,6 +43,7 @@ public struct MindMap: Identifiable, Equatable, Codable, Sendable {
         self.isShared = isShared
         self.shareURL = shareURL
         self.sharePermissions = sharePermissions
+        self.templateId = templateId
         self.createdAt = createdAt
         self.updatedAt = updatedAt
         self.lastSyncedAt = lastSyncedAt
