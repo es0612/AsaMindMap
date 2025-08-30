@@ -9,7 +9,7 @@ public struct TutorialView: View {
     public init() {}
     
     public var body: some View {
-        NavigationView {
+NavigationView {
             VStack(spacing: 0) {
                 if viewModel.isShowingTutorial {
                     // アクティブなチュートリアル表示
@@ -40,9 +40,9 @@ public struct TutorialView: View {
                     }
                 }
             }
-        }
-        .task {
-            await viewModel.loadTutorials()
+            .task {
+                await viewModel.loadTutorials()
+            }
         }
     }
     

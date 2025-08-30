@@ -9,7 +9,7 @@ public struct HelpView: View {
     public init() {}
     
     public var body: some View {
-        NavigationView {
+NavigationView {
             VStack(spacing: 0) {
                 // カテゴリ選択
                 categorySelector
@@ -41,9 +41,9 @@ public struct HelpView: View {
                     }
                 }
             }
-        }
-        .task {
-            await viewModel.loadHelpContents()
+            .task {
+                await viewModel.loadHelpContents()
+            }
         }
     }
     

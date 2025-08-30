@@ -62,6 +62,9 @@ extension DIContainer {
         // Register I18n services
         container.registerI18nServices()
         
+        // Register Enterprise services
+        container.registerEnterpriseServices()
+        
         // Register domain services (will be implemented with repositories)
         // These will be registered when repository implementations are available
         
@@ -177,5 +180,89 @@ extension DIContainer {
                 culturalAdaptation: self.resolve(CulturalAdaptationUseCaseProtocol.self)
             )
         }
+    }
+    
+    // MARK: - Enterprise Services Registration
+    public func registerEnterpriseServices() {
+        // Register Authentication Services
+        register(SAMLAuthenticationProvider.self, instance: SAMLAuthenticationProvider())
+        register(EnterpriseSessionManager.self, instance: EnterpriseSessionManager())
+        register(JWTTokenValidator.self, instance: JWTTokenValidator())
+        
+        // Register Team and Permission Services
+        register(TeamManager.self, instance: TeamManager())
+        register(PermissionManager.self, instance: PermissionManager())
+        register(RoleManager.self, instance: RoleManager())
+        register(AccessController.self) {
+            AccessController(
+                permissionManager: self.resolve(PermissionManager.self),
+                roleManager: self.resolve(RoleManager.self)
+            )
+        }
+        
+        // Register Audit and Compliance Services
+        register(AuditLogger.self, instance: AuditLogger())
+        register(SecurityEventLogger.self, instance: SecurityEventLogger())
+        register(DataAccessLogger.self, instance: DataAccessLogger())
+        register(ComplianceReporter.self) {
+            ComplianceReporter(
+                auditLogger: self.resolve(AuditLogger.self),
+                securityLogger: self.resolve(SecurityEventLogger.self)
+            )
+        }
+        register(AuditLogSearchService.self) {
+            AuditLogSearchService(auditLogger: self.resolve(AuditLogger.self))
+        }
+        register(AuditLogExporter.self, instance: AuditLogExporter())
+        register(LogRetentionManager.self, instance: LogRetentionManager())
+        register(EncryptedAuditLogger.self, instance: EncryptedAuditLogger())
+        register(AnomalousActivityMonitor.self, instance: AnomalousActivityMonitor())
+        register(ComplianceMonitor.self, instance: ComplianceMonitor())
+        
+        // Register Enterprise Use Cases
+        register(EnterpriseAuthenticationUseCaseProtocol.self, factory: {
+            EnterpriseAuthenticationUseCase(
+                samlProvider: self.resolve(SAMLAuthenticationProvider.self),
+                sessionManager: self.resolve(EnterpriseSessionManager.self),
+                jwtValidator: self.resolve(JWTTokenValidator.self),
+                auditLogger: self.resolve(AuditLogger.self)
+            )
+        })
+        
+        register(TeamManagementUseCaseProtocol.self, factory: {
+            TeamManagementUseCase(
+                teamManager: self.resolve(TeamManager.self),
+                accessController: self.resolve(AccessController.self),
+                auditLogger: self.resolve(AuditLogger.self)
+            )
+        })
+        
+        register(PermissionManagementUseCaseProtocol.self, factory: {
+            PermissionManagementUseCase(
+                permissionManager: self.resolve(PermissionManager.self),
+                accessController: self.resolve(AccessController.self),
+                auditLogger: self.resolve(AuditLogger.self)
+            )
+        })
+        
+        register(AuditComplianceUseCaseProtocol.self, factory: {
+            AuditComplianceUseCase(
+                complianceReporter: self.resolve(ComplianceReporter.self),
+                auditSearchService: self.resolve(AuditLogSearchService.self),
+                logExporter: self.resolve(AuditLogExporter.self),
+                activityMonitor: self.resolve(AnomalousActivityMonitor.self),
+                complianceMonitor: self.resolve(ComplianceMonitor.self),
+                auditLogger: self.resolve(AuditLogger.self)
+            )
+        })
+        
+        register(EnterpriseMasterUseCaseProtocol.self, factory: {
+            EnterpriseMasterUseCase(
+                authUseCase: self.resolve(EnterpriseAuthenticationUseCaseProtocol.self),
+                teamUseCase: self.resolve(TeamManagementUseCaseProtocol.self),
+                permissionUseCase: self.resolve(PermissionManagementUseCaseProtocol.self),
+                auditUseCase: self.resolve(AuditComplianceUseCaseProtocol.self)
+            )
+        })
     }
 }
