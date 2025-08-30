@@ -59,6 +59,9 @@ extension DIContainer {
             MindMapValidator()
         }
         
+        // Register I18n services
+        container.registerI18nServices()
+        
         // Register domain services (will be implemented with repositories)
         // These will be registered when repository implementations are available
         
@@ -132,6 +135,47 @@ extension DIContainer {
         
         register(ValidateMediaURLUseCaseProtocol.self) {
             ValidateMediaURLUseCase()
+        }
+    }
+    
+    // MARK: - I18n Services Registration
+    public func registerI18nServices() {
+        // Register LocalizationManager as singleton
+        register(LocalizationManager.self, instance: LocalizationManager())
+        
+        // Register RTLLayoutManager as singleton
+        register(RTLLayoutManager.self, instance: RTLLayoutManager())
+        
+        // Register CulturalAdaptationService as singleton
+        register(CulturalAdaptationService.self, instance: CulturalAdaptationService())
+        
+        // Register I18n Use Cases
+        register(LocalizationUseCaseProtocol.self) {
+            LocalizationUseCase(
+                localizationManager: self.resolve(LocalizationManager.self)
+            )
+        }
+        
+        register(RTLLayoutUseCaseProtocol.self) {
+            RTLLayoutUseCase(
+                rtlLayoutManager: self.resolve(RTLLayoutManager.self),
+                localizationManager: self.resolve(LocalizationManager.self)
+            )
+        }
+        
+        register(CulturalAdaptationUseCaseProtocol.self) {
+            CulturalAdaptationUseCase(
+                culturalAdaptationService: self.resolve(CulturalAdaptationService.self),
+                localizationManager: self.resolve(LocalizationManager.self)
+            )
+        }
+        
+        register(I18nUseCaseProtocol.self) {
+            I18nUseCase(
+                localization: self.resolve(LocalizationUseCaseProtocol.self),
+                rtlLayout: self.resolve(RTLLayoutUseCaseProtocol.self),
+                culturalAdaptation: self.resolve(CulturalAdaptationUseCaseProtocol.self)
+            )
         }
     }
 }
