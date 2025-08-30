@@ -69,6 +69,17 @@ AsaMindMapは**クリーンアーキテクチャ + MVVM**パターンを採用�
 - **UserDefaults**: App settings storage
 - **Keychain**: Secure credential storage
 
+### Monetization & Commerce
+- **StoreKit 2**: App内課金とサブスクリプション管理
+- **Receipt Validation**: レシート検証とライセンス管理
+- **Purchase State Management**: 課金状態の永続化と同期
+
+### User Support & Analytics
+- **Help Content System**: 構造化ヘルプコンテンツ管理
+- **Tutorial Engine**: インタラクティブチュートリアル実行
+- **Feedback Collection**: ユーザーフィードバック収集・分析
+- **Crash Reporting**: システム標準クラッシュレポート統合
+
 ## External Dependencies
 
 ### Current Dependencies
@@ -92,7 +103,12 @@ AsaMindMapは**クリーンアーキテクチャ + MVVM**パターンを採用�
 ```
 Package/
 ├── MindMapCore/         # ドメイン層・ビジネスロジック
+│   ├── Monetization/   # 収益化・課金機能
+│   ├── UserSupport/    # ユーザーサポート機能
+│   ├── Sharing/        # 共有・コラボレーション
+│   └── CloudKit/       # iCloud同期統合
 ├── MindMapUI/           # プレゼンテーション層
+│   └── Monetization/   # 課金UI・ペイウォール
 ├── DataLayer/           # データ永続化
 ├── NetworkLayer/        # 通信処理（将来用）
 └── DesignSystem/        # UI/UXコンポーネント
@@ -202,6 +218,9 @@ PROVISIONING_PROFILE=<PRODUCTION_PROFILE>
 - **NodeEntity**: ノード情報
 - **MediaEntity**: 添付メディア
 - **TagEntity**: タグ情報
+- **TemplateEntity**: テンプレートデータ（カテゴリ、ノード構造）
+- **SearchHistoryEntity**: 検索履歴・保存済み検索
+- **PurchaseStateEntity**: 課金状態・ライセンス情報
 
 ### CloudKit Integration
 - **Private Database**: ユーザー個人データ
@@ -268,6 +287,17 @@ Tests/
 - **Core Animation**: GPU活用のアニメーション
 - **Timer Management**: 適切なタイマー管理
 - **Background Modes**: 必要最小限の背景処理
+
+### Search & Template Performance
+- **Full-Text Indexing**: Core Dataのフルテキスト検索最適化
+- **Query Caching**: 頻繁な検索クエリのキャッシュ化
+- **Template Lazy Loading**: テンプレートの遅延読み込みとメモリ管理
+- **Incremental Search**: リアルタイム検索のパフォーマンス最適化
+
+### Monetization Performance
+- **StoreKit Caching**: プロダクト情報のローカルキャッシュ
+- **Receipt Processing**: バックグラウンドでの非同期レシート検証
+- **Purchase State Sync**: 課金状態の効率的同期
 
 ## Security & Privacy
 

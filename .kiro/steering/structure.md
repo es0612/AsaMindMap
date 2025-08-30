@@ -53,15 +53,18 @@ Package/Sources/
 │   ├── DIContainer.swift    # 依存性注入コンテナ
 │   ├── Entities/           # ドメインエンティティ
 │   ├── Extensions/         # Swift拡張機能
+│   ├── Monetization/       # 収益化・課金機能
 │   ├── Repositories/       # リポジトリプロトコル
 │   ├── Services/           # ドメインサービス
 │   ├── Sharing/            # 共有機能
 │   ├── UseCases/           # ユースケース実装
+│   ├── UserSupport/        # ユーザーサポート機能
 │   └── Validation/         # バリデーションルール
 ├── MindMapUI/               # プレゼンテーション層
 │   ├── Accessibility/      # アクセシビリティ対応
 │   ├── Animation/          # アニメーション機能
 │   ├── Gestures/           # ジェスチャー管理
+│   ├── Monetization/       # 課金UI・ペイウォール
 │   ├── Performance/        # パフォーマンス最適化
 │   ├── ViewModels/         # ViewModel実装
 │   └── Views/              # SwiftUIビュー
@@ -84,6 +87,8 @@ Package/Sources/
 - **Validation**: ビジネスルールの検証
 - **CloudKit**: iCloudデータ同期機能
 - **Sharing**: マインドマップ共有機能
+- **Monetization**: StoreKit統合、レシート検証、プレミアム機能ライセンス管理
+- **UserSupport**: ヘルプシステム、チュートリアル、フィードバック収集、クラッシュレポート
 - **Extensions**: Swift標準型の拡張機能
 
 #### MindMapUI (Presentation Layer)
@@ -92,6 +97,7 @@ Package/Sources/
 - **Gestures**: タッチ・ペンシル操作の制御
 - **Accessibility**: VoiceOverやDynamic Type対応
 - **Animation**: スムーズなアニメーション効果
+- **Monetization**: ペイウォールUI、プレミアムアクセス管理、課金状態表示
 - **Performance**: UIパフォーマンス最適化
 
 #### DataLayer (Infrastructure Layer)
@@ -119,6 +125,8 @@ Package/Tests/
 │   ├── Entities/            # エンティティテスト
 │   ├── UseCases/            # ユースケーステスト
 │   ├── Integration/         # 統合テスト
+│   ├── Monetization/        # 収益化機能テスト
+│   ├── UserSupport/         # ユーザーサポートテスト
 │   ├── Mocks/               # モックオブジェクト
 │   └── TestHelpers/         # テストユーティリティ
 ├── MindMapUITests/           # プレゼンテーション層テスト
@@ -153,12 +161,14 @@ Package/Tests/
 ## File Naming Conventions
 
 ### Swift Files
-- **Entities**: `MindMap.swift`, `Node.swift`
-- **Protocols**: `MindMapRepositoryProtocol.swift`
-- **Implementations**: `CoreDataMindMapRepository.swift`
-- **Use Cases**: `CreateMindMapUseCase.swift`
-- **ViewModels**: `MindMapViewModel.swift`
-- **Views**: `MindMapCanvasView.swift`
+- **Entities**: `MindMap.swift`, `Node.swift`, `Template.swift`, `SearchHistory.swift`
+- **Protocols**: `MindMapRepositoryProtocol.swift`, `TemplateRepositoryProtocol.swift`
+- **Implementations**: `CoreDataMindMapRepository.swift`, `StoreKitService.swift`
+- **Use Cases**: `CreateMindMapUseCase.swift`, `TemplateUseCases.swift`, `MonetizationUseCases.swift`
+- **ViewModels**: `MindMapViewModel.swift`, `PaywallViewModel.swift`, `HelpViewModel.swift`
+- **Views**: `MindMapCanvasView.swift`, `PaywallView.swift`, `TutorialView.swift`
+- **Services**: `MonetizationService.swift`, `PurchaseStateManager.swift`
+- **Support**: `Help.swift`, `Tutorial.swift`, `Feedback.swift`, `CrashReport.swift`
 
 ### Test Files
 - **Unit Tests**: `NodeTests.swift`, `CreateMindMapUseCaseTests.swift`
