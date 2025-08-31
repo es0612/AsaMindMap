@@ -48,6 +48,10 @@ Kiro方式の仕様駆動開発用ディレクトリ。ステアリング文書�
 ```
 Package/Sources/
 ├── MindMapCore/              # ドメイン層・ビジネスロジック
+│   ├── AIAssistant/        # AI支援機能 (Task 26)
+│   ├── Analytics/          # 統計・分析機能 (Task 23)
+│   ├── I18n/               # 国際化・ローカライゼーション (Task 24)
+│   ├── Enterprise/         # エンタープライズ機能 (Task 25)
 │   ├── CloudKit/           # CloudKit統合機能
 │   ├── Common/              # 共通ユーティリティ
 │   ├── DIContainer.swift    # 依存性注入コンテナ
@@ -56,6 +60,7 @@ Package/Sources/
 │   ├── Monetization/       # 収益化・課金機能
 │   ├── Repositories/       # リポジトリプロトコル
 │   ├── Services/           # ドメインサービス
+│   │   └── APIIntegration/ # API・プラットフォーム統合 (Task 27)
 │   ├── Sharing/            # 共有機能
 │   ├── UseCases/           # ユースケース実装
 │   ├── UserSupport/        # ユーザーサポート機能
@@ -85,11 +90,16 @@ Package/Sources/
 - **Services**: 複雑なドメインロジックを封装
 - **Repositories**: データアクセスの抽象化
 - **Validation**: ビジネスルールの検証
+- **AIAssistant**: AIマインドマップ生成、スマート提案、自然言語処理、プライバシー管理
+- **Analytics**: 使用状況追跡、パフォーマンス分析、エンゲージメント測定、プライバシー準拠データ収集
+- **I18n**: 多言語ローカライゼーション、RTLレイアウト、文化的適応、動的言語切り替え
+- **Enterprise**: チーム管理、SSO認証、監査ログ、エンタープライズ統合
 - **CloudKit**: iCloudデータ同期機能
 - **Sharing**: マインドマップ共有機能
 - **Monetization**: StoreKit統合、レシート検証、プレミアム機能ライセンス管理
 - **UserSupport**: ヘルプシステム、チュートリアル、フィードバック収集、クラッシュレポート
 - **Extensions**: Swift標準型の拡張機能
+- **Services/APIIntegration**: 外部プラットフォーム連携、Webhook管理、Webコンテンツクリッピング、開発者API
 
 #### MindMapUI (Presentation Layer)
 - **Views**: SwiftUIによるユーザーインターフェース
