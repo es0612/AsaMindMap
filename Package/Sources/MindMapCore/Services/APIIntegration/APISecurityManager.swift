@@ -494,105 +494,13 @@ public class BruteForceDetector {
     }
 }
 
-// MARK: - GDPR Compliance
-public struct DataDeletionRequest {
-    let userId: String
-    let requestId: UUID
-    let requestedAt: Date
-    let includeBackups: Bool
-    
-    public init(userId: String, requestId: UUID, requestedAt: Date, includeBackups: Bool) {
-        self.userId = userId
-        self.requestId = requestId
-        self.requestedAt = requestedAt
-        self.includeBackups = includeBackups
-    }
-}
-
-public struct DataDeletionResult {
-    let success: Bool
-    let deletedItems: Set<DataCategory>
-    let completedAt: Date?
-}
-
-public enum DataCategory {
-    case mindMaps
-    case userProfile
-    case apiLogs
-    case backups
-}
-
-public struct DataPortabilityRequest {
-    let userId: String
-    let requestId: UUID
-    let format: APIExportFormat
-    let includeMetadata: Bool
-    
-    public init(userId: String, requestId: UUID, format: APIExportFormat, includeMetadata: Bool) {
-        self.userId = userId
-        self.requestId = requestId
-        self.format = format
-        self.includeMetadata = includeMetadata
-    }
-}
+// MARK: - GDPR Compliance Support
+// GDPR compliance types are defined in PrivacyComplianceManager
 
 public enum APIExportFormat {
     case json
     case xml
     case csv
-}
-
-public struct DataPortabilityResult {
-    let success: Bool
-    let dataPackage: UserDataPackage?
-    let downloadUrl: URL
-}
-
-public struct UserDataPackage {
-    let mindMaps: [MindMap]
-    let userProfile: UserProfile?
-    let exportedAt: Date
-}
-
-public struct UserProfile {
-    let userId: String
-    let email: String
-    let preferences: [String: Any]
-}
-
-public class GDPRComplianceManager {
-    private var userData: [String: UserDataPackage] = [:]
-    
-    public init() {}
-    
-    public func processDataDeletion(_ request: DataDeletionRequest) async throws -> DataDeletionResult {
-        // ユーザーデータの削除をシミュレート
-        userData.removeValue(forKey: request.userId)
-        
-        return DataDeletionResult(
-            success: true,
-            deletedItems: [.mindMaps, .userProfile, .apiLogs],
-            completedAt: Date()
-        )
-    }
-    
-    public func getUserData(userId: String) async throws -> UserDataPackage? {
-        return userData[userId]
-    }
-    
-    public func exportUserData(_ request: DataPortabilityRequest) async throws -> DataPortabilityResult {
-        let dataPackage = UserDataPackage(
-            mindMaps: [], // Mock data
-            userProfile: UserProfile(userId: request.userId, email: "user@example.com", preferences: [:]),
-            exportedAt: Date()
-        )
-        
-        return DataPortabilityResult(
-            success: true,
-            dataPackage: dataPackage,
-            downloadUrl: URL(string: "https://secure.example.com/exports/\(request.requestId)")!
-        )
-    }
 }
 
 // MARK: - Security Errors

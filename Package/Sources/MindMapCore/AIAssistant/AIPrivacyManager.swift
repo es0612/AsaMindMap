@@ -57,7 +57,7 @@ public final class AIPrivacyManager {
     
     /// プライバシー同意確認
     public func checkUserConsent(for processingType: ProcessingType) -> Bool {
-        return ConsentManager.shared.hasConsent(for: processingType)
+        return AIConsentManager.shared.hasConsent(for: processingType)
     }
     
     /// データ保持期間チェック
@@ -201,8 +201,8 @@ private final class LocalDataProcessor {
 }
 
 /// 同意管理システム
-private final class ConsentManager {
-    static let shared = ConsentManager()
+private final class AIConsentManager {
+    static let shared = AIConsentManager()
     private var consents: [ProcessingType: Bool] = [:]
     
     private init() {
