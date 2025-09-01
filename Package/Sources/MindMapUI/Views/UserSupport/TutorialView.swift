@@ -24,11 +24,7 @@ NavigationView {
             .navigationBarTitleDisplayMode(.large)
             #endif
             .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .navigationBarTrailing) {
-                #else
                 ToolbarItem(placement: .primaryAction) {
-                #endif
                     if viewModel.isShowingTutorial {
                         Button("終了") {
                             viewModel.cancelTutorial()

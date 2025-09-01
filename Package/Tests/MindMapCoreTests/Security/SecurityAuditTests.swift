@@ -292,7 +292,7 @@ enum ComponentType {
 }
 
 enum AccessLevel {
-    case public
+    case `public`
     case authenticated
     case admin
     case system

@@ -31,11 +31,7 @@ NavigationView {
             .navigationBarTitleDisplayMode(.large)
             #endif
             .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .navigationBarTrailing) {
-                #else
                 ToolbarItem(placement: .primaryAction) {
-                #endif
                     Button("完了") {
                         dismiss()
                     }
